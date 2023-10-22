@@ -3,3 +3,4 @@ logs
 __pycache__
 videos
 saved_models
+*.dat
