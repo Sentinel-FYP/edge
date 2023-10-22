@@ -26,16 +26,16 @@ class ModelThread(Thread):
                       clip_length=64, output_size=(172, 172))
         self.logger.info("Loaded Model")
         self.logger.info(f"video : {self.video.path}")
-        for frame in self.video.get_frames(show=False):
+        start = timer()
+        for fc, frame in enumerate(self.video.get_frames(show=False)):
             if self.terminate_event.is_set():
                 break
-            start = timer()
             model.feed_frame(frame)
-            end = timer()
             self.logger.info(f"prediction : {model.prediction}")
-            self.logger.info(f"latency : {end - start}")
             self.predictions.put(model.prediction)
-
+        end = timer()
+        self.logger.info(
+            f"total_frames : {fc} | time_taken : {end - start} | latency : {(end - start) / fc}")
         self.logger.info("Model thread terminated")
         self.terminate_event.set()
 
