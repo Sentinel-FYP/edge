@@ -4,10 +4,10 @@ import argparse
 
 
 @profile
-def spawn_model_process(num_of_processes):
+def spawn_model_process(num_of_processes, video_path):
     processes = []
     for _ in range(num_of_processes):
-        model_process = ModelThread("videos/video.mp4")
+        model_process = ModelThread(video_path)
         processes.append(model_process)
         model_process.start()
 
@@ -18,5 +18,7 @@ def spawn_model_process(num_of_processes):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("n", type=int, help="Number of processes to spawn")
+    parser.add_argument("video_path", type=str,
+                        help="Path of video to process")
     args = parser.parse_args()
-    spawn_model_process(args.n)
+    spawn_model_process(args.n, args.video_path)
