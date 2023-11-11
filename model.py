@@ -7,6 +7,7 @@ class Model:
         self.model_path = model_path
         self.clip_length = clip_length
         self.prediction = "Loading..."
+        self.label = None
         self.frame_count = 0
         logging.set_verbosity(logging.ERROR)
         interpreter = tf.lite.Interpreter(model_path)
@@ -36,6 +37,7 @@ class Model:
             probabilities = tf.nn.softmax(logits, axis=-1)
             for label, p in self.get_top_k(probabilities[-1]):
                 break
+            self.label = label
             self.prediction = f'{label}: {p:.3f}'
 
     def get_logits(self, inputs):
