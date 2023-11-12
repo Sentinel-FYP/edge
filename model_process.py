@@ -1,6 +1,6 @@
 from threading import Thread, Event
 from queue import Queue
-from model import Model
+from model import Model, AnomalyType
 import logging
 from video import Video
 from timeit import default_timer as timer
@@ -37,21 +37,22 @@ class ModelThread(Thread):
             if self.terminate_event.is_set():
                 break
             model.feed_frame(frame)
-            self.logger.info(f"prediction : {model.prediction}")
+            self.logger.info(
+                f"prediction : {model.prediction} | probability : {model.probability}")
             self.predictions.put(model.prediction)
-            if model.label == "Anomaly" and log_sent == True:
+            if model.prediction == AnomalyType.ANOMALY and log_sent == True:
                 log_sent = False
                 anomaly_log = None
-            if model.label == "Anomaly" and log_sent == False and anomaly_log is None:
+            if model.prediction == AnomalyType.ANOMALY and log_sent == False and anomaly_log is None:
                 print("Anomaly Detected")
                 anomaly_log = AnomalyLog(
                     occurredAt=datetime.now().isoformat(), fromDevice=self.deviceMongoId)
-            if model.label == "Normal" and log_sent == False and anomaly_log is not None:
+            if model.prediction == AnomalyType.NORMAL and log_sent == False and anomaly_log is not None:
                 print("Normal detected. posting to server")
                 anomaly_log.post_to_server(endedAt=datetime.now().isoformat())
                 log_sent = True
 
-        if model.label == "Anomaly" and log_sent == False and anomaly_log is not None:
+        if model.prediction == AnomalyType.ANOMALY and log_sent == False and anomaly_log is not None:
             print("Posting to server")
             anomaly_log.post_to_server(endedAt=datetime.now().isoformat())
 

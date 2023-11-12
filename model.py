@@ -1,13 +1,25 @@
 import tensorflow as tf
 from absl import logging
+from enum import Enum
+
+
+class AnomalyType(Enum):
+    ANOMALY = 0
+    NORMAL = 1
+
+    def __repr__(self) -> str:
+        if self == AnomalyType.ANOMALY:
+            return "Anomaly"
+        else:
+            return "Normal"
 
 
 class Model:
     def __init__(self, model_path, clip_length=64, output_size=(172, 172)):
         self.model_path = model_path
         self.clip_length = clip_length
-        self.prediction = "Loading..."
-        self.label = None
+        self.prediction: AnomalyType = AnomalyType.NORMAL
+        self.probability = 0.0
         self.frame_count = 0
         logging.set_verbosity(logging.ERROR)
         interpreter = tf.lite.Interpreter(model_path)
@@ -37,8 +49,8 @@ class Model:
             probabilities = tf.nn.softmax(logits, axis=-1)
             for label, p in self.get_top_k(probabilities[-1]):
                 break
-            self.label = label
-            self.prediction = f'{label}: {p:.3f}'
+            self.probability = p
+            self.prediction = AnomalyType.ANOMALY if label == "Anomaly" else AnomalyType.NORMAL
 
     def get_logits(self, inputs):
         outputs = self.model(**self.states, image=inputs)
