@@ -1,19 +1,19 @@
-import requests
-from urllib.parse import urljoin
+import httpx
 import os
+from anomaly_log import AnomalyLog
 
 
-def set_jwt():
-    url = urljoin(os.getenv("BASE_URL"), "api/deviceAuth")
-    data = {"deviceID": os.getenv("DEVICE_ID")}
-    response = requests.post(url, json=data)
-    os.environ["token"] = response.json()["token"]
+class APIClient:
+    def __init__(self):
+        self.client = httpx.AsyncClient(base_url=os.getenv("BASE_URL"))
+        data = {"deviceID": os.getenv("DEVICE_ID")}
+        with httpx.Client(base_url=os.getenv("BASE_URL")) as sync_client:
+            response = sync_client.post("deviceAuth", json=data)
+            # set bearer token in client
+            self.client.headers["Authorization"] = f"Bearer {response.json()['token']}"
+            self.deviceMongoId = response.json()["edgeDevice"]["_id"]
 
-
-def get_device():
-    url = urljoin(os.getenv("BASE_URL"), "api/edgeDevice")
-    headers = {"Authorization": f"Bearer {os.getenv('token')}"}
-    response = requests.get(url, headers=headers)
-    for device in response.json():
-        if device["deviceID"] == os.getenv("DEVICE_ID"):
-            return device
+    async def post_anomaly_log(self, anomaly_log: AnomalyLog):
+        data = anomaly_log.__dict__
+        response = await self.client.post("anomalyLog", json=data)
+        return response.json()

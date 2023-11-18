@@ -8,10 +8,12 @@ from anomaly_log import AnomalyLog
 from datetime import datetime
 import cv2
 import uuid
+from api import APIClient
+import asyncio
 
 
 class ModelThread(Thread):
-    def __init__(self, video_path, deviceMongoId):
+    def __init__(self, video_path):
         Thread.__init__(self)
         logging.basicConfig(filename=f"logs/{__name__}.log", filemode='w',
                             format="%(threadName)s | %(message)s",
@@ -20,8 +22,8 @@ class ModelThread(Thread):
         self.video = Video(video_path, output_size=(172, 172))
         self.predictions = Queue()
         self.terminate_event = Event()
-        self.deviceMongoId = deviceMongoId
         self.logger = logging.getLogger(__name__)
+        self.api_client = APIClient()
 
     def run(self):
         self.logger.info("Model thread started")
@@ -52,17 +54,19 @@ class ModelThread(Thread):
                 video_writer = cv2.VideoWriter(
                     f"videos/{clipFileName}", cv2.VideoWriter_fourcc(*'mp4v'), self.video.fps, frame.shape[:2][::-1])
                 anomaly_log = AnomalyLog(
-                    occurredAt=datetime.now().isoformat(), fromDevice=self.deviceMongoId, clipFileName=clipFileName)
+                    occurredAt=datetime.now().isoformat(), fromDevice=self.api_client.deviceMongoId, clipFileName=clipFileName)
             if model.prediction == AnomalyType.NORMAL and log_sent == False and anomaly_log is not None:
                 print("Normal detected. posting to server")
-                anomaly_log.post_to_server(endedAt=datetime.now().isoformat())
+                anomaly_log.endedAt = datetime.now().isoformat()
+                asyncio.run(self.api_client.post_anomaly_log(anomaly_log))
                 log_sent = True
                 video_writer.release()
                 video_writer = None
 
         if model.prediction == AnomalyType.ANOMALY and log_sent == False and anomaly_log is not None:
             print("Loop Ended. Posting to server")
-            anomaly_log.post_to_server(endedAt=datetime.now().isoformat())
+            anomaly_log.endedAt = datetime.now().isoformat()
+            asyncio.run(self.api_client.post_anomaly_log(anomaly_log))
             video_writer.release()
             video_writer = None
 
@@ -74,3 +78,4 @@ class ModelThread(Thread):
 
     def terminate(self):
         self.terminate_event.set()
+        self.api_client.client.aclose()

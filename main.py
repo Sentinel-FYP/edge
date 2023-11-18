@@ -2,15 +2,14 @@ from model.thread import ModelThread
 from memory_profiler import profile
 import argparse
 from dotenv import load_dotenv
-from api import set_jwt, get_device
 from dotenv import load_dotenv
 
 
 # @profile
-def spawn_model_process(num_of_processes, video_path, deviceMongoId):
+def spawn_model_process(num_of_processes, video_path):
     processes = []
     for _ in range(num_of_processes):
-        model_process = ModelThread(video_path, deviceMongoId)
+        model_process = ModelThread(video_path)
         processes.append(model_process)
         model_process.start()
 
@@ -25,7 +24,4 @@ if __name__ == "__main__":
     parser.add_argument("video_path", type=str,
                         help="Path of video to process")
     args = parser.parse_args()
-    set_jwt()
-    device = get_device()
-    deviceMongoId = device["_id"]
-    spawn_model_process(args.n, args.video_path, deviceMongoId)
+    spawn_model_process(args.n, args.video_path)
