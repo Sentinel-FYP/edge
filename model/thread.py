@@ -6,6 +6,8 @@ from video import Video
 from timeit import default_timer as timer
 from anomaly_log import AnomalyLog
 from datetime import datetime
+import cv2
+import uuid
 
 
 class ModelThread(Thread):
@@ -31,7 +33,10 @@ class ModelThread(Thread):
         start = timer()
         log_sent = False
         anomaly_log = None
+        video_writer = None
         for fc, frame in enumerate(self.video.get_frames(show=True)):
+            if video_writer is not None:
+                video_writer.write(frame)
             if self.terminate_event.is_set():
                 break
             model.feed_frame(frame)
@@ -43,16 +48,23 @@ class ModelThread(Thread):
                 anomaly_log = None
             if model.prediction == AnomalyType.ANOMALY and log_sent == False and anomaly_log is None:
                 print("Anomaly Detected")
+                clipFileName = f"{uuid.uuid4()}.mp4"
+                video_writer = cv2.VideoWriter(
+                    f"videos/{clipFileName}", cv2.VideoWriter_fourcc(*'mp4v'), self.video.fps, frame.shape[:2][::-1])
                 anomaly_log = AnomalyLog(
-                    occurredAt=datetime.now().isoformat(), fromDevice=self.deviceMongoId)
+                    occurredAt=datetime.now().isoformat(), fromDevice=self.deviceMongoId, clipFileName=clipFileName)
             if model.prediction == AnomalyType.NORMAL and log_sent == False and anomaly_log is not None:
                 print("Normal detected. posting to server")
                 anomaly_log.post_to_server(endedAt=datetime.now().isoformat())
                 log_sent = True
+                video_writer.release()
+                video_writer = None
 
         if model.prediction == AnomalyType.ANOMALY and log_sent == False and anomaly_log is not None:
-            print("Posting to server")
+            print("Loop Ended. Posting to server")
             anomaly_log.post_to_server(endedAt=datetime.now().isoformat())
+            video_writer.release()
+            video_writer = None
 
         end = timer()
         self.logger.info(

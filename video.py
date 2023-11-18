@@ -1,5 +1,5 @@
-import tensorflow as tf
 import cv2
+import sys
 
 
 class Video:
@@ -10,22 +10,7 @@ class Video:
             raise Exception(f"{path} not found")
         self.output_size = output_size
         self.text = text
-
-    def format_frames(self, frame):
-        """
-        Pad and resize an image from a video.
-
-        Args:
-            frame: Image that needs to resized and padded.
-            output_size: Pixel size of the output frame image.
-
-        Return:
-            Formatted frame with padding of specified output size.
-        """
-        output_size = self.output_size
-        frame = tf.image.convert_image_dtype(frame, tf.float32)
-        frame = tf.image.resize_with_pad(frame, *output_size)
-        return frame
+        self.fps = self.src.get(cv2.CAP_PROP_FPS)
 
     def get_frames(self, show=False):
         src = self.src
@@ -37,7 +22,7 @@ class Video:
                 self.show_frame(frame)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
-            yield self.format_frames(frame)
+            yield frame
         src.release()
         cv2.destroyAllWindows()
 
@@ -50,3 +35,7 @@ class Video:
                     font, font_scale, color, thickness)
         cv2.imshow('frame', frame)
         cv2.waitKey(1)
+
+    def get_fourcc(self):
+        fourcc = self.src.get(cv2.CAP_PROP_FOURCC)
+        return int(fourcc).to_bytes(4, byteorder=sys.byteorder).decode()

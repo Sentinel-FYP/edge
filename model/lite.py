@@ -18,6 +18,7 @@ class LiteModel:
     def __init__(self, model_path, clip_length=64, output_size=(172, 172)):
         self.model_path = model_path
         self.clip_length = clip_length
+        self.output_size = output_size
         self.prediction: AnomalyType = AnomalyType.NORMAL
         self.probability = 0.0
         self.frame_count = 0
@@ -41,6 +42,7 @@ class LiteModel:
         return init_states
 
     def feed_frame(self, frame):
+        frame = self.format_frames(frame)
         self.frame_count += 1
         inputs = frame[tf.newaxis, tf.newaxis, ...]
         logits, self.states = self.get_logits(inputs)
@@ -51,6 +53,22 @@ class LiteModel:
                 break
             self.probability = p
             self.prediction = AnomalyType.ANOMALY if label == "Anomaly" else AnomalyType.NORMAL
+
+    def format_frames(self, frame):
+        """
+        Pad and resize an image from a video.
+
+        Args:
+            frame: Image that needs to resized and padded.
+            output_size: Pixel size of the output frame image.
+
+        Return:
+            Formatted frame with padding of specified output size.
+        """
+        output_size = self.output_size
+        frame = tf.image.convert_image_dtype(frame, tf.float32)
+        frame = tf.image.resize_with_pad(frame, *output_size)
+        return frame
 
     def get_logits(self, inputs):
         outputs = self.model(**self.states, image=inputs)
