@@ -14,7 +14,7 @@ class AnomalyType(Enum):
             return "Normal"
 
 
-class Model:
+class LiteModel:
     def __init__(self, model_path, clip_length=64, output_size=(172, 172)):
         self.model_path = model_path
         self.clip_length = clip_length

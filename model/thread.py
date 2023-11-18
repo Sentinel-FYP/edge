@@ -1,6 +1,6 @@
 from threading import Thread, Event
 from queue import Queue
-from model import Model, AnomalyType
+from model.lite import LiteModel, AnomalyType
 import logging
 from video import Video
 from timeit import default_timer as timer
@@ -24,16 +24,14 @@ class ModelThread(Thread):
     def run(self):
         self.logger.info("Model thread started")
         self.logger.info("Loading Model")
-        model = Model("saved_models/a0_stream_5.0.tflite",
-                      clip_length=64, output_size=(172, 172))
+        model = LiteModel("saved_models/a0_stream_5.0.tflite",
+                          clip_length=64, output_size=(172, 172))
         self.logger.info("Loaded Model")
         self.logger.info(f"video : {self.video.path}")
         start = timer()
         log_sent = False
         anomaly_log = None
-        for fc, frame in enumerate(self.video.get_frames(show=False)):
-            if fc > 100:
-                break
+        for fc, frame in enumerate(self.video.get_frames(show=True)):
             if self.terminate_event.is_set():
                 break
             model.feed_frame(frame)

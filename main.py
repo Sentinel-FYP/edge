@@ -1,4 +1,4 @@
-from model_process import ModelThread
+from model.thread import ModelThread
 from memory_profiler import profile
 import argparse
 from dotenv import load_dotenv
