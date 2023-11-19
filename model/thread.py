@@ -50,25 +50,25 @@ class ModelThread(Thread):
                 anomaly_log = None
             if model.prediction == AnomalyType.ANOMALY and log_sent == False and anomaly_log is None:
                 print("Anomaly Detected")
-                clipFileName = f"{uuid.uuid4()}.mp4"
+                clipFileName = f"videos/{uuid.uuid4()}.mp4"
                 video_writer = cv2.VideoWriter(
-                    f"videos/{clipFileName}", cv2.VideoWriter_fourcc(*'mp4v'), self.video.fps, frame.shape[:2][::-1])
+                    clipFileName, cv2.VideoWriter_fourcc(*'mp4v'), self.video.fps, frame.shape[:2][::-1])
                 anomaly_log = AnomalyLog(
                     occurredAt=datetime.now().isoformat(), fromDevice=self.api_client.deviceMongoId, clipFileName=clipFileName)
             if model.prediction == AnomalyType.NORMAL and log_sent == False and anomaly_log is not None:
+                video_writer.release()
+                video_writer = None
                 print("Normal detected. posting to server")
                 anomaly_log.endedAt = datetime.now().isoformat()
                 asyncio.run(self.api_client.post_anomaly_log(anomaly_log))
                 log_sent = True
-                video_writer.release()
-                video_writer = None
 
         if model.prediction == AnomalyType.ANOMALY and log_sent == False and anomaly_log is not None:
+            video_writer.release()
+            video_writer = None
             print("Loop Ended. Posting to server")
             anomaly_log.endedAt = datetime.now().isoformat()
             asyncio.run(self.api_client.post_anomaly_log(anomaly_log))
-            video_writer.release()
-            video_writer = None
 
         end = timer()
         self.logger.info(

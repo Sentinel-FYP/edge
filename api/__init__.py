@@ -1,6 +1,7 @@
 import httpx
 import os
 from anomaly_log import AnomalyLog
+import utils
 
 
 class APIClient:
@@ -15,5 +16,6 @@ class APIClient:
 
     async def post_anomaly_log(self, anomaly_log: AnomalyLog):
         data = anomaly_log.__dict__
-        response = await self.client.post("anomalyLog", json=data)
+        thumbnail = utils.generate_video_thumbnail(anomaly_log.clipFileName)
+        response = await self.client.post("anomalyLog", params=data, files={"thumbnail": open(thumbnail, "rb")})
         return response.json()
