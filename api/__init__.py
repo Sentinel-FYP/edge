@@ -17,5 +17,5 @@ class APIClient:
     async def post_anomaly_log(self, anomaly_log: AnomalyLog):
         data = anomaly_log.__dict__
         thumbnail = utils.generate_video_thumbnail(anomaly_log.clipFileName)
-        response = await self.client.post("anomalyLog", params=data, files={"thumbnail": open(thumbnail, "rb")})
+        response = await self.client.post("anomalyLog", data=data, files={"thumbnail": open(thumbnail, "rb")})
         return response.json()
