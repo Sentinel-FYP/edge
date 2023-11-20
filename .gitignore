@@ -6,3 +6,4 @@ videos
 saved_models
 *.dat
 jetson_logs
+temp
