@@ -1,6 +1,8 @@
 import cv2
 from PIL import Image
 import uuid
+import psutil
+import tensorflow as tf
 
 
 def generate_video_thumbnail(video_file: str):
@@ -14,3 +16,7 @@ def generate_video_thumbnail(video_file: str):
         image.save(filename)
         return filename
     return None
+
+
+def get_system_ram():
+    return round(psutil.virtual_memory().total / (1024.0 ** 3))

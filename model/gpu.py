@@ -2,7 +2,7 @@ import tensorflow as tf
 from absl import logging
 
 
-class Model:
+class GPUModel:
     def __init__(self, model_path, clip_length=64, output_size=(172, 172)):
         inputs = tf.ones([1, clip_length, output_size[0], output_size[1], 3])
         self.model_path = model_path

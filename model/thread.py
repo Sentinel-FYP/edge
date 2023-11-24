@@ -1,6 +1,7 @@
 from threading import Thread, Event
 from queue import Queue
 from model.lite import LiteModel, AnomalyType
+from model.gpu import GPUModel
 import logging
 from video import Video
 from timeit import default_timer as timer
@@ -10,6 +11,8 @@ import cv2
 import uuid
 from api import APIClient
 import asyncio
+import utils
+import tensorflow as tf
 
 
 class ModelThread(Thread):
@@ -28,8 +31,12 @@ class ModelThread(Thread):
     def run(self):
         self.logger.info("Model thread started")
         self.logger.info("Loading Model")
-        model = LiteModel("saved_models/a0_stream_5.0.tflite",
-                          clip_length=64, output_size=(172, 172))
+        if utils.get_system_ram() > 8 and tf.test.is_gpu_available(cuda_only=True):
+            model = GPUModel("saved_models/a0_stream_5.0",
+                             clip_length=64, output_size=(172, 172))
+        else:
+            model = LiteModel("saved_models/a0_stream_5.0.tflite",
+                              clip_length=64, output_size=(172, 172))
         self.logger.info("Loaded Model")
         self.logger.info(f"video : {self.video.path}")
         start = timer()
