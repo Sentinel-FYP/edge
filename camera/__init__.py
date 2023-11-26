@@ -1,6 +1,6 @@
 import socket
 import tqdm
-
+from .Camera import Camera, CameraDisconnected
 
 CAMS_CACHE_FILE = 'data/cams.txt'
 
