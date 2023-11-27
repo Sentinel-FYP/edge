@@ -4,6 +4,8 @@ import asyncio
 import dotenv
 import os
 import camera
+from model.thread import ModelThread
+import json
 
 
 async def sio_client():
@@ -39,8 +41,17 @@ async def sio_client():
     @sio.on("cameras:add")
     async def on_cameras_add(data):
         print("cameras:add")
-        print(data)
-        await sio.emit("cameras:added", {"camera": data["camera"]})
+        print(f"Adding camera at {data}")
+        try:
+            ip, port = data["ip"].split(":")
+            new_camera = camera.Camera(ip=ip, port=port)
+            new_camera.connect(data["username"], data["password"])
+            new_thread = ModelThread(camera=new_camera)
+            new_thread.start()
+            await sio.emit("cameras:added", {"message": "Camera added", 'deviceId': os.getenv("DEVICE_ID")})
+        except Exception as e:
+            await sio.emit("cameras:added", {"message": "Camera Connection Error", 'deviceId': os.getenv("DEVICE_ID")})
+            print(e)
 
     await sio.connect(f'{os.getenv("SERVER_URL")}?token={token}')
     await sio.emit("create room", {"deviceId": os.getenv("DEVICE_ID")})

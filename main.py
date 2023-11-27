@@ -16,18 +16,18 @@ async def main():
         "username": "admin",
         "password": "admin"
     }]
-    processes: list[ModelThread] = []
-    for cred in cameras_credentials:
-        print(f"Connecting to camera at {cred['ip']}:{cred['port']}")
-        camera = Camera(cred["ip"], cred["port"])
-        camera.connect(cred["username"], cred["password"])
-        model_process = ModelThread(camera=camera)
-        processes.append(model_process)
-        model_process.start()
+    # processes: list[ModelThread] = []
+    # for cred in cameras_credentials:
+    #     print(f"Connecting to camera at {cred['ip']}:{cred['port']}")
+    #     camera = Camera(cred["ip"], cred["port"])
+    #     camera.connect(cred["username"], cred["password"])
+    #     model_process = ModelThread(camera=camera)
+    #     processes.append(model_process)
+    #     model_process.start()
 
-    for process in processes:
-        process.join()
-    await sio.disconnect()
+    # for process in processes:
+    #     process.join()
+    await sio.wait()
 
 if __name__ == "__main__":
     asyncio.run(main())
