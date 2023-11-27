@@ -9,7 +9,7 @@ from camera import Camera
 
 async def main():
     load_dotenv()
-    # sio = await sio_client()
+    sio = await sio_client()
     cameras_credentials = [{
         "ip": "192.168.100.9",
         "port": "8534",
@@ -18,7 +18,7 @@ async def main():
     }]
     processes: list[ModelThread] = []
     for cred in cameras_credentials:
-        print("Connecting to camera")
+        print(f"Connecting to camera at {cred['ip']}:{cred['port']}")
         camera = Camera(cred["ip"], cred["port"])
         camera.connect(cred["username"], cred["password"])
         model_process = ModelThread(camera=camera)
@@ -27,7 +27,7 @@ async def main():
 
     for process in processes:
         process.join()
-    # await sio.disconnect()
+    await sio.disconnect()
 
 if __name__ == "__main__":
     asyncio.run(main())
