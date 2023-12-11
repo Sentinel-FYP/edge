@@ -2,15 +2,16 @@ import cv2
 
 
 class Camera:
-    def __init__(self, ip, port) -> None:
-        self.ip = ip
-        self.port = port
+    def __init__(self, ip, port, username, password) -> None:
+        self.connection_str = f'rtsp://{username}:{password}@{ip}:{port}'
 
-    def connect(self, username, password):
-        self.cap = cv2.VideoCapture(
-            f'rtsp://{username}:{password}@{self.ip}:{self.port}')
+    def __init__(self, connection_str):
+        self.connection_str = connection_str
+
+    def connect(self):
+        self.cap = cv2.VideoCapture(self.connection_str)
         if not self.cap.isOpened():
-            raise Exception("RTSP stream not found")
+            raise Exception("Video source not found")
 
     def disconnect(self):
         self.cap.release()
@@ -18,6 +19,7 @@ class Camera:
     def get_frame(self):
         ret, frame = self.cap.read()
         if not ret or frame is None:
+            self.disconnect()
             raise CameraDisconnected("Camera disconnected")
         return frame
 

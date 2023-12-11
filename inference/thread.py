@@ -1,11 +1,9 @@
 from threading import Thread, Event
-from queue import Queue
-from model.lite import LiteModel, AnomalyType
-from model.gpu import GPUModel
+from .lite import LiteModel, AnomalyType
+from .gpu import GPUModel
 import logging
-from video import Video
 from timeit import default_timer as timer
-from anomaly_log import AnomalyLog
+from api.models import AnomalyLog
 from datetime import datetime
 import cv2
 import uuid
@@ -17,7 +15,7 @@ from camera import Camera, CameraDisconnected
 
 
 class ModelThread(Thread):
-    def __init__(self, camera: Camera):
+    def __init__(self, camera: Camera, async_loop: asyncio.AbstractEventLoop):
         Thread.__init__(self)
         logging.basicConfig(
             format="%(threadName)s | %(message)s",
@@ -26,6 +24,8 @@ class ModelThread(Thread):
         self.terminate_event = Event()
         self.logger = logging.getLogger(__name__)
         self.api_client = APIClient()
+        assert async_loop.is_running()
+        self.async_loop = async_loop
 
     def run(self):
         self.logger.info("Model thread started")
@@ -37,7 +37,6 @@ class ModelThread(Thread):
             model = LiteModel("saved_models/a0_stream_5.0.tflite",
                               clip_length=64, output_size=(172, 172))
         self.logger.info("Loaded Model")
-        self.logger.info(f"camera ip : {self.camera.ip}")
         start = timer()
         log_sent = False
         anomaly_log = None
@@ -69,7 +68,8 @@ class ModelThread(Thread):
                     video_writer = None
                     print("Normal detected. posting to server")
                     anomaly_log.endedAt = datetime.now().isoformat()
-                    asyncio.run(self.api_client.post_anomaly_log(anomaly_log))
+                    self.async_loop.create_task(
+                        self.api_client.post_anomaly_log(anomaly_log))
                     log_sent = True
         except CameraDisconnected:
             print("Camera Disconnected. Terminating thread")
@@ -81,12 +81,14 @@ class ModelThread(Thread):
                 video_writer = None
                 print("Loop Ended. Posting to server")
                 anomaly_log.endedAt = datetime.now().isoformat()
-                asyncio.run(self.api_client.post_anomaly_log(anomaly_log))
+                self.async_loop.create_task(
+                    self.api_client.post_anomaly_log(anomaly_log))
             end = timer()
             self.logger.info(
                 f"total_frames : {fc} | time_taken : {end - start} | latency : {(end - start) / fc}")
             self.logger.info("Model thread terminated")
             self.terminate_event.set()
+            self.camera.disconnect()
 
     def terminate(self):
         self.terminate_event.set()

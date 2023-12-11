@@ -4,7 +4,7 @@ import asyncio
 import dotenv
 import os
 import camera
-from model.thread import ModelThread
+from inference import ModelThread
 import json
 
 
