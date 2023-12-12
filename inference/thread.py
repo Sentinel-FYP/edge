@@ -12,10 +12,11 @@ import asyncio
 import utils
 import tensorflow as tf
 from camera import Camera, CameraDisconnected
+from queue import Queue
 
 
 class ModelThread(Thread):
-    def __init__(self, camera: Camera):
+    def __init__(self, camera: Camera, tasks_queue: Queue, async_loop: asyncio.AbstractEventLoop):
         Thread.__init__(self)
         logging.basicConfig(
             format="%(threadName)s | %(message)s",
@@ -24,7 +25,8 @@ class ModelThread(Thread):
         self.terminate_event = Event()
         self.logger = logging.getLogger(__name__)
         self.api_client = APIClient()
-        self.tasks = []
+        self.tasks_queue = tasks_queue
+        self.async_loop = async_loop
 
     def run(self):
         asyncio.run(self._run())
@@ -70,9 +72,9 @@ class ModelThread(Thread):
                     video_writer = None
                     print("Normal detected. posting to server")
                     anomaly_log.endedAt = datetime.now().isoformat()
-                    log_task = asyncio.create_task(
+                    log_task = self.async_loop.create_task(
                         self.api_client.post_anomaly_log(anomaly_log))
-                    self.tasks.append(log_task)
+                    self.tasks_queue.put(log_task)
                     log_sent = True
         except CameraDisconnected:
             print("Camera Disconnected. Terminating thread")
@@ -84,14 +86,12 @@ class ModelThread(Thread):
                 video_writer = None
                 print("Loop Ended. Posting to server")
                 anomaly_log.endedAt = datetime.now().isoformat()
-                log_task = asyncio.create_task(
+                log_task = self.async_loop.create_task(
                     self.api_client.post_anomaly_log(anomaly_log))
-                self.tasks.append(log_task)
+                self.tasks_queue.put(log_task)
             end = timer()
             self.logger.info(
                 f"total_frames : {fc} | time_taken : {end - start} | latency : {(end - start) / fc}")
-            for task in self.tasks:
-                await task
             self.logger.info("Model thread terminated")
             self.terminate_event.set()
             self.camera.disconnect()

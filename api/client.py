@@ -21,7 +21,6 @@ class APIClient:
         data = anomaly_log.__dict__
         thumbnail = utils.generate_video_thumbnail(anomaly_log.clipFileName)
         response = await self.client.post("anomalyLog", data=data, files={"thumbnail": open(thumbnail, "rb")})
-        print(f'response: {response}')
         return response.json()
 
     async def disconnect(self):
