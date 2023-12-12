@@ -17,9 +17,11 @@ class APIClient:
             self.deviceMongoId = response.json()["edgeDevice"]["_id"]
 
     async def post_anomaly_log(self, anomaly_log: AnomalyLog):
+        print("posting anomaly")
         data = anomaly_log.__dict__
         thumbnail = utils.generate_video_thumbnail(anomaly_log.clipFileName)
         response = await self.client.post("anomalyLog", data=data, files={"thumbnail": open(thumbnail, "rb")})
+        print(f'response: {response}')
         return response.json()
 
     async def disconnect(self):

@@ -15,7 +15,7 @@ from camera import Camera, CameraDisconnected
 
 
 class ModelThread(Thread):
-    def __init__(self, camera: Camera, async_loop: asyncio.AbstractEventLoop):
+    def __init__(self, camera: Camera):
         Thread.__init__(self)
         logging.basicConfig(
             format="%(threadName)s | %(message)s",
@@ -24,10 +24,12 @@ class ModelThread(Thread):
         self.terminate_event = Event()
         self.logger = logging.getLogger(__name__)
         self.api_client = APIClient()
-        assert async_loop.is_running()
-        self.async_loop = async_loop
+        self.tasks = []
 
     def run(self):
+        asyncio.run(self._run())
+
+    async def _run(self):
         self.logger.info("Model thread started")
         self.logger.info("Loading Model")
         if utils.get_system_ram() > 8 and tf.test.is_gpu_available(cuda_only=True):
@@ -68,8 +70,9 @@ class ModelThread(Thread):
                     video_writer = None
                     print("Normal detected. posting to server")
                     anomaly_log.endedAt = datetime.now().isoformat()
-                    self.async_loop.create_task(
+                    log_task = asyncio.create_task(
                         self.api_client.post_anomaly_log(anomaly_log))
+                    self.tasks.append(log_task)
                     log_sent = True
         except CameraDisconnected:
             print("Camera Disconnected. Terminating thread")
@@ -81,15 +84,17 @@ class ModelThread(Thread):
                 video_writer = None
                 print("Loop Ended. Posting to server")
                 anomaly_log.endedAt = datetime.now().isoformat()
-                self.async_loop.create_task(
+                log_task = asyncio.create_task(
                     self.api_client.post_anomaly_log(anomaly_log))
+                self.tasks.append(log_task)
             end = timer()
             self.logger.info(
                 f"total_frames : {fc} | time_taken : {end - start} | latency : {(end - start) / fc}")
+            for task in self.tasks:
+                await task
             self.logger.info("Model thread terminated")
             self.terminate_event.set()
             self.camera.disconnect()
 
     def terminate(self):
         self.terminate_event.set()
-        self.api_client.client.aclose()
