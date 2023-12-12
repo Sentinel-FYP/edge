@@ -6,6 +6,7 @@ import asyncio
 from camera import Camera
 import asyncio
 from queue import Queue
+import time
 
 
 async def main():
@@ -25,7 +26,7 @@ async def main():
         while tasks_queue.qsize() > 0:
             task_to_run = tasks_queue.get()
             await task_to_run
-        await asyncio.sleep(3)
+        time.sleep(5)
 
 if __name__ == "__main__":
     asyncio.run(main())
