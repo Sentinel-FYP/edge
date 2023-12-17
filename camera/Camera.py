@@ -5,9 +5,9 @@ import json
 
 
 class Camera:
-    def __init__(self, url) -> None:
+    def __init__(self, url, should_reconnect=True) -> None:
         self.url = url
-        self.suspend_stream = False
+        self.should_reconnect = should_reconnect
         self.suspend_time = 4
 
     @classmethod
@@ -24,17 +24,20 @@ class Camera:
         cv2.destroyAllWindows()
         self.cap.release()
 
+    def reconnect(self):
+        self.disconnect()
+        time.sleep(self.suspend_time)
+        self.connect()
+
     def get_frame(self, show=False):
         ret, frame = self.cap.read()
         if not ret or frame is None:
-            if not self.suspend_stream:
-                print("Waiting for stream to resume")
-                self.suspend_stream = True
-                self.disconnect()
-                time.sleep(self.suspend_time)
-                self.connect()
+            if self.should_reconnect:
+                print("Reconnecting...")
+                self.reconnect()
                 return
-            raise CameraDisconnected("Camera disconnected")
+            else:
+                raise CameraDisconnected("Camera disconnected")
         if show:
             cv2.imshow("frame", frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
