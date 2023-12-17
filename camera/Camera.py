@@ -1,19 +1,22 @@
 import cv2
 import argparse
 import time
+import json
 
 
 class Camera:
-    def __init__(self, ip, port, username, password) -> None:
-        self.__init__(f'rtsp://{username}:{password}@{ip}:{port}')
-
-    def __init__(self, connection_str):
-        self.connection_str = connection_str
+    def __init__(self, url) -> None:
+        self.url = url
         self.suspend_stream = False
         self.suspend_time = 4
 
+    @classmethod
+    def from_credentials(cls, ip, port, username, password):
+        url = f"rtsp://{username}:{password}@{ip}:{port}/"
+        return cls(url)
+
     def connect(self):
-        self.cap = cv2.VideoCapture(self.connection_str)
+        self.cap = cv2.VideoCapture(self.url)
         if not self.cap.isOpened():
             raise Exception("Video source not found")
 
@@ -49,9 +52,20 @@ class CameraDisconnected(Exception):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--url", type=str, required=True)
+    parser.add_argument("--url", type=str)
+    parser.add_argument("--json", type=str)
     args = parser.parse_args()
-    camera = Camera(args.url)
+    if args.url is None and args.json is None:
+        print(args.url, args.json)
+        raise Exception("Please provide url or json file")
+    if args.json:
+        with open(args.json, "r") as f:
+            json_data = json.load(f)
+        cam_data = json_data[0]
+        camera = Camera.from_credentials(cam_data["ip"], cam_data["port"],
+                                         cam_data["username"], cam_data["password"])
+    else:
+        camera = Camera(args.url)
     camera.connect()
     while True:
         try:
