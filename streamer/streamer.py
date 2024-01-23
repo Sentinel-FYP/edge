@@ -1,7 +1,7 @@
 import cv2
 import base64
-from sio_client import sio_client
 import socketio
+import os
 
 
 class Streamer:
@@ -14,4 +14,6 @@ class Streamer:
         print("Streaming")
         retval, buffer = cv2.imencode(".jpg", frame)
         jpg_as_text = base64.b64encode(buffer)
-        self.sio_client.emit("stream", {"channel": self.channel, "frame": jpg_as_text})
+        self.sio_client.emit(
+            "stream", {"deviceId": os.getenv("DEVICE_ID"), "frame": jpg_as_text}
+        )

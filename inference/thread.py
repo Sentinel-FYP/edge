@@ -66,8 +66,6 @@ class ModelThread(Thread):
                 if self.terminate_event.is_set():
                     break
                 self.streamer.stream(frame)
-                if fc > 10:
-                    break
                 continue
                 model.feed_frame(frame)
                 self.logger.info(
