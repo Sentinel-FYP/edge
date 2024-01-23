@@ -2,8 +2,8 @@ logs
 data
 .vscode
 __pycache__
-videos
 saved_models
 *.dat
 jetson_logs
 temp
+videos/*mp4
