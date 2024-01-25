@@ -5,15 +5,16 @@ import json
 
 
 class Camera:
-    def __init__(self, url, should_reconnect=True) -> None:
+    def __init__(self, url, should_reconnect=True, name=None) -> None:
         self.url = url
         self.should_reconnect = should_reconnect
         self.suspend_time = 4
+        self.name = name
 
     @classmethod
-    def from_credentials(cls, ip, port, username, password):
+    def from_credentials(cls, ip, port, username, password, name):
         url = f"rtsp://{username}:{password}@{ip}:{port}/"
-        return cls(url)
+        return cls(url, name=name)
 
     def connect(self):
         self.cap = cv2.VideoCapture(self.url)
@@ -40,13 +41,16 @@ class Camera:
                 raise CameraDisconnected("Camera disconnected")
         if show:
             cv2.imshow("frame", frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            if cv2.waitKey(1) & 0xFF == ord("q"):
                 self.disconnect()
                 raise CameraDisconnected("Camera disconnected")
         return frame
 
     def get_fps(self):
         return self.cap.get(cv2.CAP_PROP_FPS)
+
+    def __str__(self):
+        return f"Camera {self.name} at {self.url}"
 
 
 class CameraDisconnected(Exception):
@@ -65,8 +69,9 @@ if __name__ == "__main__":
         with open(args.json, "r") as f:
             json_data = json.load(f)
         cam_data = json_data[0]
-        camera = Camera.from_credentials(cam_data["ip"], cam_data["port"],
-                                         cam_data["username"], cam_data["password"])
+        camera = Camera.from_credentials(
+            cam_data["ip"], cam_data["port"], cam_data["username"], cam_data["password"]
+        )
     else:
         camera = Camera(args.url)
     camera.connect()

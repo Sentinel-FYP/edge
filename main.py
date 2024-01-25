@@ -3,7 +3,7 @@ from memory_profiler import profile
 from dotenv import load_dotenv
 from sio_client import sio_client
 import asyncio
-from camera import Camera
+from camera import Camera, CameraDisconnected
 import asyncio
 from queue import Queue
 import time
@@ -14,15 +14,37 @@ from api import APIClient
 
 async def main():
     load_dotenv()
-    api_client = APIClient()
+    api_client = await APIClient.create()
     token = api_client.auth_token
     sio = sio_client(token)
-    connection_strs = ["./videos/normal.mp4"]
+
+    # Connect to all cameras
+    camerasCredentials = api_client.device["cameras"]
+    cameras: list[Camera] = []
+    for cred in camerasCredentials:
+        cameras.append(
+            Camera.from_credentials(
+                ip=cred["localIP"],
+                port=cred["port"],
+                username=cred["username"],
+                password=cred["password"],
+                name=cred["cameraName"],
+            )
+        )
+    print(f"Total cameras: {len(cameras)}")
+    for camera in cameras:
+        try:
+            print(f"Connecting to {camera}")
+            camera.connect()
+            print("Connected")
+        except Exception:
+            print(f"Failed to connect to {camera}")
+            cameras.remove(camera)
+            continue
+
     processes: list[ModelThread] = []
     tasks_queue = Queue()
-    for conn in connection_strs:
-        camera = Camera(conn)
-        camera.connect()
+    for camera in cameras:
         streamer = Streamer(sio_client=sio, channel=str(uuid.uuid4()))
         model_process = ModelThread(
             camera=camera,
