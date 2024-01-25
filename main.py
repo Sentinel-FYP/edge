@@ -22,26 +22,30 @@ async def main():
     camerasCredentials = api_client.device["cameras"]
     cameras: list[Camera] = []
     for cred in camerasCredentials:
-        cameras.append(
-            Camera.from_credentials(
-                ip=cred["localIP"],
-                port=cred["port"],
-                username=cred["username"],
-                password=cred["password"],
-                name=cred["cameraName"],
-            )
+        camera = Camera.from_credentials(
+            ip=cred["localIP"],
+            port=cred["port"],
+            username=cred["username"],
+            password=cred["password"],
+            name=cred["cameraName"],
         )
+        if cred["active"]:
+            cameras.append(camera)
+        else:
+            print(f"Camera {camera} is disabled at database. Skipping...")
+
     print(f"Total cameras: {len(cameras)}")
+    connected_cameras = []
     for camera in cameras:
         try:
             print(f"Connecting to {camera}")
             camera.connect()
+            connected_cameras.append(camera)
             print("Connected")
         except Exception:
             print(f"Failed to connect to {camera}")
-            cameras.remove(camera)
             continue
-
+    cameras = connected_cameras
     processes: list[ModelThread] = []
     tasks_queue = Queue()
     for camera in cameras:

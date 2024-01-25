@@ -1,8 +1,8 @@
 import socket
 import tqdm
-from .Camera import Camera, CameraDisconnected
+from .Camera import Camera, CameraDisconnected, TextColors
 
-CAMS_CACHE_FILE = 'data/cams.txt'
+CAMS_CACHE_FILE = "data/cams.txt"
 
 
 def get_local_ip():
@@ -11,10 +11,10 @@ def get_local_ip():
     s.settimeout(3)
     try:
         # Doesn't actually send data, just connects
-        s.connect(('10.255.255.255', 1))
+        s.connect(("10.255.255.255", 1))
         local_ip = s.getsockname()[0]
     except socket.error:
-        local_ip = '127.0.0.1'
+        local_ip = "127.0.0.1"
     finally:
         s.close()
     return local_ip
@@ -39,7 +39,7 @@ def discover_cameras():
             sock.settimeout(1)
             try:
                 sock.connect((ip, port))
-                cams.append(f'{ip}:{port}')
+                cams.append(f"{ip}:{port}")
             except (socket.timeout, socket.error):
                 pass
             finally:
@@ -48,6 +48,6 @@ def discover_cameras():
 
 
 def cache_to_file(cams: list):
-    with open(CAMS_CACHE_FILE, 'w') as f:
+    with open(CAMS_CACHE_FILE, "w") as f:
         for cam in cams:
-            f.write(cam+'\n')
+            f.write(cam + "\n")

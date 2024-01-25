@@ -11,7 +11,7 @@ from api import APIClient
 import asyncio
 import utils
 import tensorflow as tf
-from camera import Camera, CameraDisconnected
+from camera import Camera, CameraDisconnected, TextColors
 from queue import Queue
 from streamer import Streamer
 
@@ -65,12 +65,19 @@ class ModelThread(Thread):
                     video_writer.write(frame)
                 if self.terminate_event.is_set():
                     break
-                self.streamer.stream(frame)
-                continue
                 model.feed_frame(frame)
-                self.logger.info(
-                    f"prediction : {model.prediction} | probability : {model.probability}"
+                Camera.put_text_overlay(
+                    frame,
+                    text=f"prediction : {model.prediction} | probability : {model.probability}",
+                    color=TextColors.GREEN,
                 )
+                self.streamer.stream(frame)
+                if fc % 100 == 0:
+                    self.logger.info(
+                        f"prediction : {model.prediction} | probability : {model.probability}"
+                    )
+
+                continue
                 if model.prediction == AnomalyType.ANOMALY and log_sent == True:
                     log_sent = False
                     anomaly_log = None
@@ -111,19 +118,19 @@ class ModelThread(Thread):
         except Exception as e:
             print(e)
         finally:
-            if (
-                model.prediction == AnomalyType.ANOMALY
-                and log_sent == False
-                and anomaly_log is not None
-            ):
-                video_writer.release()
-                video_writer = None
-                print("Loop Ended. Posting to server")
-                anomaly_log.endedAt = datetime.now().isoformat()
-                log_task = self.async_loop.create_task(
-                    self.api_client.post_anomaly_log(anomaly_log)
-                )
-                self.tasks_queue.put(log_task)
+            # if (
+            #     model.prediction == AnomalyType.ANOMALY
+            #     and log_sent == False
+            #     and anomaly_log is not None
+            # ):
+            #     video_writer.release()
+            #     video_writer = None
+            #     print("Loop Ended. Posting to server")
+            #     anomaly_log.endedAt = datetime.now().isoformat()
+            #     log_task = self.async_loop.create_task(
+            #         self.api_client.post_anomaly_log(anomaly_log)
+            #     )
+            #     self.tasks_queue.put(log_task)
             end = timer()
             self.logger.info(
                 f"total_frames : {fc} | time_taken : {end - start} | latency : {(end - start) / fc}"

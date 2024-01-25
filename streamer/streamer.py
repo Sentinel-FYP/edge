@@ -11,7 +11,6 @@ class Streamer:
 
     def stream(self, frame):
         # encode to base64
-        print("Streaming")
         retval, buffer = cv2.imencode(".jpg", frame)
         jpg_as_text = base64.b64encode(buffer)
         self.sio_client.emit(

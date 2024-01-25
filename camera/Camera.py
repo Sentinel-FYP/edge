@@ -2,6 +2,12 @@ import cv2
 import argparse
 import time
 import json
+from enum import Enum
+
+
+class TextColors(Enum):
+    RED = (0, 0, 255)
+    GREEN = (0, 255, 0)
 
 
 class Camera:
@@ -45,6 +51,20 @@ class Camera:
                 self.disconnect()
                 raise CameraDisconnected("Camera disconnected")
         return frame
+
+    def display(self):
+        while True:
+            try:
+                self.get_frame(show=True)
+            except CameraDisconnected:
+                print("Stream ended")
+                break
+
+    @staticmethod
+    def put_text_overlay(frame, text, color: TextColors = TextColors.RED):
+        cv2.putText(
+            frame, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color.value, 2
+        )
 
     def get_fps(self):
         return self.cap.get(cv2.CAP_PROP_FPS)
