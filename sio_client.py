@@ -61,5 +61,5 @@ class SioClient:
         #         print(e)
 
         sio.connect(f'{os.getenv("SERVER_URL")}?token={token}')
-        sio.emit("create room", {"deviceId": os.getenv("DEVICE_ID")})
+        sio.emit("room:create", {"deviceId": os.getenv("DEVICE_ID")})
         return self
