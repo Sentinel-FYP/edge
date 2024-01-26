@@ -26,7 +26,7 @@ class ModelThread(Thread):
         api_client: APIClient,
     ):
         Thread.__init__(self)
-        logging.basicConfig(format="%(threadName)s | %(message)s", level=logging.ERROR)
+        logging.basicConfig(format="%(threadName)s | %(message)s", level=logging.INFO)
         self.camera = camera
         self.terminate_event = Event()
         self.logger = logging.getLogger(__name__)
