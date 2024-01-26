@@ -2,7 +2,6 @@ logs
 data
 .vscode
 __pycache__
-saved_models
 *.dat
 jetson_logs
 temp

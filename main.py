@@ -50,7 +50,10 @@ async def main():
     #         continue
     # cameras = connected_cameras
 
-    cameras = [Camera(url="videos/video.mp4")]
+    camera = Camera(url="videos/video.mp4")
+    camera.connect()
+    cameras = [camera]
+
     processes: list[ModelThread] = []
     tasks_queue = Queue()
     for camera in cameras:
