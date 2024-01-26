@@ -11,13 +11,12 @@ import json
 
 class SioClient:
     def __init__(self):
-        self.sio = None
+        self.sio = socketio.Client()
 
     @classmethod
     def create(cls, token):
         # api_client.disconnect()
         self = cls()
-        self.sio = socketio.Client()
         sio = self.sio
 
         @sio.event

@@ -50,7 +50,8 @@ async def main():
     #         continue
     # cameras = connected_cameras
 
-    cameras = [Camera(url="videos/video.mp4")]
+    # cameras = [Camera(url="videos/video.mp4")]
+    cameras = []
     processes: list[ModelThread] = []
     tasks_queue = Queue()
     for camera in cameras:
@@ -65,34 +66,45 @@ async def main():
         processes.append(model_process)
         model_process.start()
     while True:
-        # @sio.on("cameras:add")
-        # async def on_cameras_add(data):
-        #     print("cameras:add")
-        #     try:
-        #         ip, port = data["ip"].split(":")
 
-        #         new_camera = Camera.from_credentials(
-        #             ip=ip,
-        #             port=port,
-        #             username=data["username"],
-        #             password=data["password"],
-        #             name="New Camera",
-        #         )
-        #         new_thread = ModelThread(camera=new_camera)
-        #         new_thread.start()
-        #         await sio.emit(
-        #             "cameras:added",
-        #             {"message": "Camera added", "deviceId": os.getenv("DEVICE_ID")},
-        #         )
-        #     except Exception as e:
-        #         await sio.emit(
-        #             "cameras:added",
-        #             {
-        #                 "message": "Camera Connection Error",
-        #                 "deviceId": os.getenv("DEVICE_ID"),
-        #             },
-        #         )
-        #         print(e)
+        @sio.on("cameras:add")
+        async def on_cameras_add(data):
+            print("cameras:add")
+            try:
+                ip, port = data["ip"].split(":")
+
+                new_camera = Camera.from_credentials(
+                    ip=ip,
+                    port=port,
+                    username=data["username"],
+                    password=data["password"],
+                    name="New Camera",
+                )
+                print(f"Connecting to new Camera {new_camera}")
+                new_camera.connect()
+                print("Connected")
+                new_thread = ModelThread(
+                    camera=new_camera,
+                    tasks_queue=tasks_queue,
+                    async_loop=asyncio.get_event_loop(),
+                    streamer=streamer,
+                    api_client=api_client,
+                )
+
+                new_thread.start()
+                await sio.emit(
+                    "cameras:added",
+                    {"message": "Camera added", "deviceId": os.getenv("DEVICE_ID")},
+                )
+            except Exception as e:
+                print("connection failed")
+                await sio.emit(
+                    "cameras:added",
+                    {
+                        "message": "Camera Connection Error",
+                        "deviceId": os.getenv("DEVICE_ID"),
+                    },
+                )
 
         while tasks_queue.qsize() > 0:
             task_to_run = tasks_queue.get()
