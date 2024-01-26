@@ -7,3 +7,4 @@ saved_models
 jetson_logs
 temp
 videos/*mp4
+env
