@@ -11,13 +11,12 @@ import json
 
 class SioClient:
     def __init__(self):
-        self.sio = None
+        self.sio = socketio.Client()
 
     @classmethod
     def create(cls, token):
         # api_client.disconnect()
         self = cls()
-        self.sio = socketio.Client()
         sio = self.sio
 
         @sio.event
@@ -62,5 +61,5 @@ class SioClient:
         #         print(e)
 
         sio.connect(f'{os.getenv("SERVER_URL")}?token={token}')
-        sio.emit("create room", {"deviceId": os.getenv("DEVICE_ID")})
+        sio.emit("room:create", {"deviceId": os.getenv("DEVICE_ID")})
         return self

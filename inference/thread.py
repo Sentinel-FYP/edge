@@ -26,7 +26,7 @@ class ModelThread(Thread):
         api_client: APIClient,
     ):
         Thread.__init__(self)
-        logging.basicConfig(format="%(threadName)s | %(message)s", level=logging.INFO)
+        logging.basicConfig(format="%(threadName)s | %(message)s", level=logging.ERROR)
         self.camera = camera
         self.terminate_event = Event()
         self.logger = logging.getLogger(__name__)
@@ -34,9 +34,17 @@ class ModelThread(Thread):
         self.tasks_queue = tasks_queue
         self.async_loop = async_loop
         self.streamer = streamer
+        self.allow_stream = Event()
+        self.allow_stream.clear()
 
     def run(self):
         asyncio.run(self._run())
+
+    def enable_stream(self):
+        self.allow_stream.set()
+
+    def disable_stream(self):
+        self.allow_stream.clear()
 
     async def _run(self):
         self.logger.info("Model thread started")
@@ -68,10 +76,14 @@ class ModelThread(Thread):
                 model.feed_frame(frame)
                 Camera.put_text_overlay(
                     frame,
-                    text=f"prediction : {model.prediction} | probability : {model.probability}",
-                    color=TextColors.GREEN,
+                    text=f"{model.prediction}: {model.probability*100:.2f}%",
+                    color=TextColors.GREEN
+                    if model.prediction == AnomalyType.NORMAL
+                    else TextColors.RED,
                 )
-                self.streamer.stream(frame)
+                if self.allow_stream.is_set():
+                    print("streaming")
+                    self.streamer.stream(frame)
                 if fc % 100 == 0:
                     self.logger.info(
                         f"prediction : {model.prediction} | probability : {model.probability}"
