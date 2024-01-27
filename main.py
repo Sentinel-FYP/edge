@@ -121,9 +121,9 @@ async def main():
             else:
                 print(f"Invalid start stream request. Camera {cameraIP} not found")
 
-        @sio.on("stream:stop")
+        @sio.on("stream:end")
         def on_stream_stop(data):
-            print("stream:start event")
+            print("stream:end event")
             cameraIP = data["cameraIP"]
             if cameraIP in processes:
                 processes[cameraIP].disable_stream()

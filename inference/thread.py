@@ -82,7 +82,7 @@ class ModelThread(Thread):
                     else TextColors.RED,
                 )
                 if self.allow_stream.is_set():
-                    print("streaming")
+                    # print("streaming")
                     self.streamer.stream(frame)
                 if fc % 100 == 0:
                     self.logger.info(
