@@ -51,8 +51,13 @@ async def main():
     #         continue
     # cameras = connected_cameras
 
-    # cameras = [Camera(url="videos/video.mp4")]
     cameras: list[Camera] = []
+
+    # FOR TESTING YOUR OWN VIDEO
+    # c = Camera(url="videos/normal_long_long.mp4")
+    # c.connect()
+    # cameras.append(c)
+
     processes = {}
     tasks_queue = Queue()
     for camera in cameras:
@@ -68,68 +73,68 @@ async def main():
         model_process.start()
 
     event_loop = asyncio.get_event_loop()
+
+    @sio.on("cameras:add")
+    def on_cameras_add(data):
+        print("cameras:add")
+        try:
+            ip, port = data["cameraIP"].split(":")
+
+            new_camera = Camera.from_credentials(
+                ip=ip,
+                port=port,
+                username=data["username"],
+                password=data["password"],
+                name="New Camera",
+            )
+            print(f"Connecting to new Camera {new_camera}")
+            new_camera.connect()
+            print("Connected")
+            streamer = Streamer(sio_client=sio)
+            new_process = ModelThread(
+                camera=new_camera,
+                tasks_queue=tasks_queue,
+                async_loop=event_loop,
+                streamer=streamer,
+                api_client=api_client,
+            )
+
+            new_process.start()
+            processes[data["cameraIP"]] = new_process
+            sio.emit(
+                "cameras:added",
+                {"message": "Camera added", "deviceId": os.getenv("DEVICE_ID")},
+            )
+        except Exception as e:
+            print("connection failed")
+            sio.emit(
+                "cameras:added",
+                {
+                    "message": "Camera Connection Error",
+                    "deviceId": os.getenv("DEVICE_ID"),
+                },
+            )
+            traceback.print_exc()
+
+    @sio.on("stream:start")
+    def on_stream_start(data):
+        print("stream:start event")
+        cameraIP = data["cameraIP"]
+        if cameraIP in processes:
+            processes[cameraIP].enable_stream()
+        else:
+            print(f"Invalid start stream request. Camera {cameraIP} not found")
+
+    @sio.on("stream:end")
+    def on_stream_stop(data):
+        print("stream:start event")
+        cameraIP = data["cameraIP"]
+        if cameraIP in processes:
+            processes[cameraIP].disable_stream()
+        else:
+            print(f"Invalid start stream request. Camera {cameraIP} not found")
+
     while True:
-
-        @sio.on("cameras:add")
-        def on_cameras_add(data):
-            print("cameras:add")
-            try:
-                ip, port = data["cameraIP"].split(":")
-
-                new_camera = Camera.from_credentials(
-                    ip=ip,
-                    port=port,
-                    username=data["username"],
-                    password=data["password"],
-                    name="New Camera",
-                )
-                print(f"Connecting to new Camera {new_camera}")
-                new_camera.connect()
-                print("Connected")
-                streamer = Streamer(sio_client=sio)
-                new_process = ModelThread(
-                    camera=new_camera,
-                    tasks_queue=tasks_queue,
-                    async_loop=event_loop,
-                    streamer=streamer,
-                    api_client=api_client,
-                )
-
-                new_process.start()
-                processes[data["cameraIP"]] = new_process
-                sio.emit(
-                    "cameras:added",
-                    {"message": "Camera added", "deviceId": os.getenv("DEVICE_ID")},
-                )
-            except Exception as e:
-                print("connection failed")
-                sio.emit(
-                    "cameras:added",
-                    {
-                        "message": "Camera Connection Error",
-                        "deviceId": os.getenv("DEVICE_ID"),
-                    },
-                )
-                traceback.print_exc()
-
-        @sio.on("stream:start")
-        def on_stream_start(data):
-            print("stream:start event")
-            cameraIP = data["cameraIP"]
-            if cameraIP in processes:
-                processes[cameraIP].enable_stream()
-            else:
-                print(f"Invalid start stream request. Camera {cameraIP} not found")
-
-        @sio.on("stream:end")
-        def on_stream_stop(data):
-            print("stream:end event")
-            cameraIP = data["cameraIP"]
-            if cameraIP in processes:
-                processes[cameraIP].disable_stream()
-            else:
-                print(f"Invalid start stream request. Camera {cameraIP} not found")
-
         try:
             # HANDLE TASKS QUEUE FOR API REQUESTS
             while tasks_queue.qsize() > 0:
