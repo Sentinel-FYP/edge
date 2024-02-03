@@ -1,6 +1,31 @@
 from aiortc.contrib.media import MediaPlayer
-from aiortc import RTCPeerConnection, RTCSessionDescription
+from aiortc import (
+    RTCPeerConnection,
+    RTCSessionDescription,
+    RTCIceServer,
+    RTCConfiguration,
+)
 import os
+
+
+ice_servers = [
+    RTCIceServer(urls=["stun:stun.l.google.com:19302"]),
+    RTCIceServer(
+        urls=["turn:13.51.86.179:3478"],
+        username="admin",
+        credential="admin",
+    ),
+    RTCIceServer(
+        urls=["turn:13.51.86.179:3478?transport=udp"],
+        username="admin",
+        credential="admin",
+    ),
+    RTCIceServer(
+        urls=["turn:13.51.86.179:3478?transport=tcp"],
+        username="admin",
+        credential="admin",
+    ),
+]
 
 
 class VideoStreamer:
@@ -16,7 +41,9 @@ class VideoStreamer:
     async def handle_offer(self, data):
         print("offer received", data)
         offer = RTCSessionDescription(sdp=data["sdp"], type=data["type"])
-        self.pc = RTCPeerConnection()
+        self.pc = RTCPeerConnection(
+            configuration=RTCConfiguration(iceServers=ice_servers)
+        )
 
         @self.pc.on("connectionstatechange")
         async def on_connectionstatechange():
