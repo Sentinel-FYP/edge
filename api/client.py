@@ -48,5 +48,5 @@ class APIClient:
         )
         return response.json()
 
-    async def disconnect(self):
+    async def close(self):
         await self.client.aclose()

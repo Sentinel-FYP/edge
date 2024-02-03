@@ -17,6 +17,12 @@ class Camera:
         self.suspend_time = 4
         self.name = name
 
+    def __hash__(self) -> int:
+        return hash(self.name)
+
+    def __eq__(self, o: object) -> bool:
+        return self.name == o.name
+
     @classmethod
     def from_credentials(cls, ip, port, username, password, name):
         url = f"rtsp://{username}:{password}@{ip}:{port}/"

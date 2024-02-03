@@ -1,8 +1,99 @@
+from .Camera import Camera, CameraDisconnected, TextColors
 import socket
 import tqdm
-from .Camera import Camera, CameraDisconnected, TextColors
+from api import APIClient
+from sio_client import SioClient
+from asyncio import AbstractEventLoop
+from inference import create_model_thread
+import os
+import traceback
 
 CAMS_CACHE_FILE = "data/cams.txt"
+CAMERAS: list[Camera] = []
+CONNECTED_CAMERAS: list[Camera] = []
+
+test_camera = None
+
+# Comment out the following code block for testing your camera
+test_camera = Camera.from_credentials(
+    "192.168.100.9", "8534", "admin", "admin", "test_camera"
+)
+
+if test_camera:
+    CAMERAS.append(test_camera)
+
+
+def register_camera_events(
+    sio: SioClient, async_loop: AbstractEventLoop, api_client: APIClient
+):
+    @sio.on("cameras:add")
+    def on_cameras_add(data):
+        print("cameras:add")
+        try:
+            ip, port = data["cameraIP"].split(":")
+            new_camera = Camera.from_credentials(
+                ip=ip,
+                port=port,
+                username=data["username"],
+                password=data["password"],
+                name="New Camera",
+            )
+            print(f"Connecting to new Camera {new_camera}")
+            new_camera.connect()
+            print("Connected")
+            create_model_thread(new_camera, sio, api_client, async_loop)
+            sio.send_camera_added(new_camera)
+        except Exception:
+            print("connection failed")
+            sio.emit(
+                "cameras:added",
+                {
+                    "message": "Camera Connection Error",
+                    "deviceId": os.getenv("DEVICE_ID"),
+                },
+            )
+            traceback.print_exc()
+
+
+def fetch_registered_cameras(api_client: APIClient):
+    try:
+        print("Fetching registered cameras from database...")
+        camerasCredentials = api_client.device["cameras"]
+        print("Total Registered Cameras", len(camerasCredentials))
+        for cred in camerasCredentials:
+            camera = Camera.from_credentials(
+                ip=cred["localIP"],
+                port=cred["port"],
+                username=cred["username"],
+                password=cred["password"],
+                name=cred["cameraName"],
+            )
+            if cred["active"]:
+                CAMERAS.append(camera)
+            else:
+                print(f"{camera} is disabled at database. Skipping...")
+    except KeyError:
+        print(f"{cred} is not a valid camera credentials. Skipping...")
+
+
+def connect_to_cameras():
+    print("Connecting to cameras fetched from database....")
+    for camera in CAMERAS:
+        try:
+            print(f"Connecting to {camera}")
+            camera.connect()
+            CONNECTED_CAMERAS.append(camera)
+            print("Connected")
+        except Exception:
+            print(f"Failed to connect to {camera}")
+            continue
+
+
+def get_connected_camera_by_name(name: str):
+    for cam in CONNECTED_CAMERAS:
+        if cam.name == name:
+            return cam
+    return None
 
 
 def get_local_ip():
