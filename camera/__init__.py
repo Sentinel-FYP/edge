@@ -8,6 +8,7 @@ from asyncio import AbstractEventLoop
 from inference import create_model_thread
 import os
 import traceback
+import config
 
 CAMS_CACHE_FILE = "data/cams.txt"
 CAM_PORTS = [8534, 8554, 554]
@@ -52,10 +53,25 @@ def register_camera_events(
                 "cameras:added",
                 {
                     "message": "Camera Connection Error",
-                    "deviceId": os.getenv("DEVICE_ID"),
+                    "deviceId": config.DEVICE_ID,
                 },
             )
             traceback.print_exc()
+
+    @sio.event("cameras:discover")
+    async def on_cameras_discover(data):
+        print("cameras:discover")
+        scan_cameras(SCAN_LIMIT)
+
+    @sio.event("cameras:discovered")
+    async def on_cameras_discovered(data):
+        print("cameras:discovered")
+        with open(CAMS_CACHE_FILE, "r") as f:
+            discovered_cams = f.readlines()
+            await sio.emit(
+                "cameras:discovered",
+                {"cams": discovered_cams, "deviceId": config.DEVICE_ID},
+            )
 
 
 def fetch_registered_cameras(api_client: APIClient):

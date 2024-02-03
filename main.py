@@ -1,6 +1,6 @@
 # from inference import ModelThread, process_cameras
 from memory_profiler import profile
-from dotenv import load_dotenv
+import config
 from sio_client import SioClient
 import asyncio
 import camera
@@ -27,10 +27,9 @@ async def shutdown():
 
 
 async def main():
-    load_dotenv(override=True)
-    print("SERVER_URL", os.getenv("SERVER_URL"))
-    print("BASE_URL", os.getenv("BASE_URL"))
-    print("DEVICE_ID", os.getenv("DEVICE_ID"))
+    print("SERVER_URL", config.SERVER_URL)
+    print("BASE_URL", config.BASE_URL)
+    print("DEVICE_ID", config.DEVICE_ID)
     api_client = await APIClient.create()
     token = api_client.auth_token
     sio = await SioClient.create(token=token)

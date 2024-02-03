@@ -5,7 +5,7 @@ from aiortc import (
     RTCIceServer,
     RTCConfiguration,
 )
-import os
+import config
 
 
 ice_servers = [
@@ -67,7 +67,7 @@ class VideoStreamer:
         return {
             "sdp": self.pc.localDescription.sdp,
             "type": self.pc.localDescription.type,
-            "deviceId": os.getenv("DEVICE_ID"),
+            "deviceId": config.DEVICE_ID,
         }
 
     async def close(self):
