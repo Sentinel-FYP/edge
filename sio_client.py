@@ -5,42 +5,41 @@ import os
 import camera
 from queue import Queue
 
-# from inference import ModelThread
 import json
 
 
 class SioClient:
     def __init__(self):
-        self.sio = socketio.Client()
+        self.sio = socketio.AsyncClient()
 
     @classmethod
-    def create(cls, token):
+    async def create(cls, token):
         # api_client.disconnect()
         self = cls()
         sio = self.sio
 
         @sio.event
-        def connect():
+        async def connect():
             print("socket connected to server")
-            sio.emit("create room", {"deviceId": os.getenv("DEVICE_ID")})
+            await sio.emit("room:create", {"deviceId": os.getenv("DEVICE_ID")})
 
         @sio.event
-        def message(data):
+        async def message(data):
             print("Message from server:", data)
 
         @sio.event
-        def disconnect():
+        async def disconnect():
             print("socket disconnected from server")
 
         # camera events
         @sio.on("cameras:discover")
-        def on_cameras_discover(data):
+        async def on_cameras_discover(data):
             print("cameras:discover")
             cameras = []
             with open(camera.CAMS_CACHE_FILE) as f:
                 for line in f:
                     cameras.append(line.strip())
-            sio.emit(
+            await sio.emit(
                 "cameras:discovered",
                 {"cameras": cameras, "deviceId": os.getenv("DEVICE_ID")},
             )
@@ -60,6 +59,12 @@ class SioClient:
         #         await sio.emit("cameras:added", {"message": "Camera Connection Error", 'deviceId': os.getenv("DEVICE_ID")})
         #         print(e)
 
-        sio.connect(f'{os.getenv("SERVER_URL")}?token={token}')
-        sio.emit("room:create", {"deviceId": os.getenv("DEVICE_ID")})
+        # await sio.connect(f'{os.getenv("SERVER_URL")}?token={token}')
+        await sio.connect(f'{os.getenv("SERVER_URL")}')
         return self
+
+    async def close(self):
+        await self.sio.disconnect()
+
+    async def send_alert(self, deviceId, localIP):
+        await self.sio.emit("alert:send", {"deviceId": deviceId, "localIP": localIP})

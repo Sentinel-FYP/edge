@@ -1,1 +1,1 @@
-from .streamer import Streamer
+from .streamer import VideoStreamer

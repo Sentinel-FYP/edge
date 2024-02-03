@@ -1,6 +1,6 @@
 class AnomalyLog:
-    def __init__(self, occurredAt, fromDevice, clipFileName):
+    def __init__(self, occurredAt, fromDevice, clipFileName, endedAt=None):
         self.occurredAt = occurredAt
         self.fromDevice = fromDevice
         self.clipFileName = clipFileName
-        self.endedAt = None
+        self.endedAt = self.endedAt
