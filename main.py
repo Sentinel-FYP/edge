@@ -8,7 +8,8 @@ import asyncio
 from api import APIClient
 import os
 from streamer import STREAMERS, register_stream_events
-
+from inference import process_cameras
+import traceback
 
 api_client: APIClient = None
 sio: SioClient = None
@@ -36,14 +37,14 @@ async def main():
     sio = await SioClient.create(token=token)
     camera.fetch_registered_cameras(api_client)
     print("Total Registered Cameras", len(camera.CAMERAS))
-    # camera.connect_to_cameras()
-    # print("Total Connected Cameras", len(camera.CONNECTED_CAMERAS))
-    # # Events for adding camera
-    # camera.register_camera_events(sio, asyncio.get_event_loop(), api_client)
-    # # Events for streaming video
-    # register_stream_events(sio)
-    # # Run inference on connected cameras in threads
-    # process_cameras(camera.CONNECTED_CAMERAS, sio, asyncio.get_event_loop(), api_client)
+    camera.connect_to_cameras()
+    print("Total Connected Cameras", len(camera.CONNECTED_CAMERAS))
+    # Events for adding camera
+    camera.register_camera_events(sio, asyncio.get_event_loop(), api_client)
+    # Events for streaming video
+    register_stream_events(sio)
+    # Run inference on connected cameras in threads
+    process_cameras(camera.CONNECTED_CAMERAS, sio, asyncio.get_event_loop(), api_client)
 
 
 if __name__ == "__main__":
@@ -54,6 +55,8 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("Keyboard Interrupt, exiting")
         pass
+    except Exception:
+        traceback.print_exc()
     finally:
         print("Shutting down...")
         loop.run_until_complete(shutdown())

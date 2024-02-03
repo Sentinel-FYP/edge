@@ -55,23 +55,28 @@ def register_camera_events(
 
 
 def fetch_registered_cameras(api_client: api.APIClient):
-    print("Fetching registered cameras from database...")
-    camerasCredentials = api_client.device["cameras"]
-    for cred in camerasCredentials:
-        camera = Camera.from_credentials(
-            ip=cred["localIP"],
-            port=cred["port"],
-            username=cred["username"],
-            password=cred["password"],
-            name=cred["cameraName"],
-        )
-        if cred["active"]:
-            CAMERAS.append(camera)
-        else:
-            print(f"{camera} is disabled at database. Skipping...")
+    try:
+        print("Fetching registered cameras from database...")
+        camerasCredentials = api_client.device["cameras"]
+        print("Total Registered Cameras", len(camerasCredentials))
+        for cred in camerasCredentials:
+            camera = Camera.from_credentials(
+                ip=cred["localIP"],
+                port=cred["port"],
+                username=cred["username"],
+                password=cred["password"],
+                name=cred["cameraName"],
+            )
+            if cred["active"]:
+                CAMERAS.append(camera)
+            else:
+                print(f"{camera} is disabled at database. Skipping...")
+    except KeyError:
+        print(f"{cred} is not a valid camera credentials. Skipping...")
 
 
 def connect_to_cameras():
+    print("Connecting to cameras fetched from database....")
     for camera in CAMERAS:
         try:
             print(f"Connecting to {camera}")
