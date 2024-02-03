@@ -1,6 +1,7 @@
 from .Camera import Camera, CameraDisconnected, TextColors
 import socket
-import tqdm
+import socket
+import ipaddress
 from api import APIClient
 from sio_client import SioClient
 from asyncio import AbstractEventLoop
@@ -9,6 +10,8 @@ import os
 import traceback
 
 CAMS_CACHE_FILE = "data/cams.txt"
+CAM_PORTS = [8534, 8554, 554]
+SCAN_LIMIT = 255
 CAMERAS: list[Camera] = []
 CONNECTED_CAMERAS: list[Camera] = []
 
@@ -96,49 +99,52 @@ def get_connected_camera_by_name(name: str):
     return None
 
 
-def get_local_ip():
-    # Get the local IP address
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.settimeout(3)
-    try:
-        # Doesn't actually send data, just connects
-        s.connect(("10.255.255.255", 1))
-        local_ip = s.getsockname()[0]
-    except socket.error:
-        local_ip = "127.0.0.1"
-    finally:
-        s.close()
-    return local_ip
+def get_network_ip():
+    # Get the local hostname and IP address
+    hostname = socket.gethostname()
+    ip = socket.gethostbyname(hostname)
+    ip = ip[: ip.rfind(".")] + ".0"
+    return ipaddress.ip_address(ip)
 
 
-def discover_cameras():
-    local_ip = get_local_ip()
+def increment_ip(ip):
+    ip = ipaddress.ip_address(ip)
+    ip += 1
+    return str(ip)
 
-    # Get the first three octets of the local IP address
-    base_ip = ".".join(local_ip.split(".")[:3]) + "."
 
-    # Set the range of ports to scan (adjust as needed)
-    port_range = [534, 8534]
-    ip_range = range(1, 20)
+def generate_ip_range(limit):
+    network_ip = get_network_ip()
+    ip = network_ip
+    for i in range(limit):
+        ip = increment_ip(ip)
+        yield ip
 
+
+def scan_cameras(limit):
     cams = []
-    print("Discovering cameras on the local network...")
-    for i in tqdm.tqdm(ip_range):
-        ip = base_ip + str(i)
-        for port in port_range:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(1)
+    for ipaddr in list(generate_ip_range(limit)):
+        print("scanning port for ip: ", ipaddr)
+        for port in CAM_PORTS:
             try:
-                sock.connect((ip, port))
-                cams.append(f"{ip}:{port}")
-            except (socket.timeout, socket.error):
-                pass
-            finally:
-                sock.close()
+                s = socket.socket(
+                    socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP
+                )
+                s.settimeout(1)
+                s.connect((str(ipaddr), port))
+                cams.append(str(ipaddr) + ":" + str(port) + "\n")
+            except socket.error:
+                continue
     cache_to_file(cams)
 
 
 def cache_to_file(cams: list):
+    clear_cache()
     with open(CAMS_CACHE_FILE, "w") as f:
         for cam in cams:
             f.write(cam + "\n")
+
+
+def clear_cache():
+    with open(CAMS_CACHE_FILE, "w") as f:
+        f.write("")

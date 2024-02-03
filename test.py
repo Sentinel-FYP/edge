@@ -1,47 +1,56 @@
-from scapy.all import sr, sr1
+from scapy.all import *
 from scapy.layers.inet import IP, ICMP, TCP
 import socket
 import ipaddress
 
 
-def get_network_range():
+def get_network_ip():
     # Get the local hostname and IP address
     hostname = socket.gethostname()
-    ip_address = socket.gethostbyname(hostname)
-
-    subnet_mask = "24"
-    # Calculate the network range
-    network = ipaddress.IPv4Network(f"{ip_address}/{subnet_mask}", strict=False)
-
-    return network
+    ip = socket.gethostbyname(hostname)
+    ip = ip[: ip.rfind(".")] + ".0"
+    return ipaddress.ip_address(ip)
 
 
-def discover_cameras(network, port=554):
-    # Create an IP range to scan
-    ip_range = IP(network)
+def increment_ip(ip):
+    ip = ipaddress.ip_address(ip)
+    ip += 1
+    return str(ip)
 
-    # Create an ICMP packet for network discovery
-    icmp_packet = IP(dst=ip_range) / ICMP()
 
-    # Send the ICMP packet and collect responses
-    response, _ = sr(icmp_packet, timeout=2, verbose=0)
+def generate_ip_range(max=20):
+    if max > 250:
+        raise ValueError("Max value cannot exceed 250")
+    network_ip = get_network_ip()
+    ip = network_ip
+    for i in range(max):
+        ip = increment_ip(ip)
+        yield ip
 
-    # Extract IP addresses from the responses
-    ip_addresses = [resp[1][IP].src for resp in response]
 
-    # Scan each IP address on the specified port
-    for ip in ip_addresses:
-        print(f"Scanning {ip} on port {port}")
-        camera_packet = IP(dst=ip) / TCP(dport=port, flags="S")
+def find_open_ports(target, ports):
+    result = []
+    for x in ports:
+        packet = IP(dst=target) / TCP(dport=x, flags="S")
+        response = sr1(packet, timeout=2, verbose=0)
+        if response is not None and TCP in response and response[TCP].flags == 0x12:
+            print(f"Port {str(x)} is open!\n")
+            result.append(x)
+            sr(
+                IP(dst=target) / TCP(dport=response.sport, flags="R"),
+                timeout=2,
+                verbose=0,
+            )
+    return result
 
-        # Send the TCP packet and wait for a response
-        response = sr1(camera_packet, timeout=1, verbose=0)
 
-        # Check if the port is open (SYN-ACK received)
-        if response and response.haslayer(TCP) and response[TCP].flags == 0x12:
-            print(f"Found IP camera at {ip}:{port}")
+def discover_cameras(max_count=10, ports=[8534]):
+    ips = list(generate_ip_range(max_count))
+    for ip in ips:
+        open_ports = find_open_ports(ip, ports)
+        if len(open_ports) > 0:
+            print(f"Found camera at {ip} with open ports {open_ports}")
 
 
 if __name__ == "__main__":
-    # Replace "192.168.1.0/24" with your network range
-    discover_cameras(network=get_network_range())
+    discover_cameras()
