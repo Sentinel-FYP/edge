@@ -12,6 +12,16 @@ CAMS_CACHE_FILE = "data/cams.txt"
 CAMERAS: list[Camera] = []
 CONNECTED_CAMERAS: list[Camera] = []
 
+test_camera = None
+
+# Comment out the following code block for testing your camera
+test_camera = Camera.from_credentials(
+    "192.168.100.9", "8534", "admin", "admin", "Test Camera"
+)
+
+if test_camera:
+    CAMERAS.append(test_camera)
+
 
 def register_camera_events(
     sio: SioClient, async_loop: AbstractEventLoop, api_client: APIClient

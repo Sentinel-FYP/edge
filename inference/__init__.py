@@ -28,3 +28,10 @@ def create_model_thread(
     )
     MODEL_THREADS[camera] = model_thread
     model_thread.start()
+
+
+def kill_threads():
+    for camera, thread in MODEL_THREADS.items():
+        thread.terminate()
+    print("All threads killed")
+    MODEL_THREADS.clear()

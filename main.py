@@ -8,7 +8,7 @@ import asyncio
 from api import APIClient
 import os
 from streamer import STREAMERS, register_stream_events
-from inference import process_cameras
+from inference import process_cameras, kill_threads
 import traceback
 
 api_client: APIClient = None
@@ -19,8 +19,7 @@ async def shutdown():
     coros = [streamer.close() for streamer in STREAMERS]
     await asyncio.gather(*coros)
     STREAMERS.clear()
-    # for thread in THREADS:
-    #     thread.terminate()
+    kill_threads()
     if api_client:
         await api_client.close()
     if sio:
