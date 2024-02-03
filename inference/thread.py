@@ -14,6 +14,9 @@ import tensorflow as tf
 from camera import Camera, CameraDisconnected, TextColors
 from queue import Queue
 from sio_client import SioClient
+import traceback
+
+ANOMALY_THRESHOLD = 0.9
 
 
 class AnomalyHandler:
@@ -42,7 +45,7 @@ class AnomalyHandler:
     def handle_anomaly_frame(self, frame):
         self.video_writer.write(frame)
 
-    def anomaly_detected(self, frame):
+    def anomaly_detected(self, frame, fps):
         if not self.anomaly_started:
             print("Anomaly Started")
             self.anomaly_started = True
@@ -51,7 +54,7 @@ class AnomalyHandler:
             self.video_writer = cv2.VideoWriter(
                 self.clipFileName,
                 cv2.VideoWriter_fourcc(*"mp4v"),
-                self.camera.get_fps(),
+                fps,
                 frame.shape[:2][::-1],
             )
         self.handle_anomaly_frame(frame)
@@ -146,8 +149,12 @@ class ModelThread(Thread):
                     self.logger.info(
                         f"prediction : {model.prediction} | probability : {model.probability}"
                     )
-                if model.prediction == AnomalyType.ANOMALY:
-                    anomaly_handler.anomaly_detected(frame)
+                if (
+                    model.prediction == AnomalyType.ANOMALY
+                    and model.probability > ANOMALY_THRESHOLD
+                ):
+                    fps = self.camera.get_fps()
+                    anomaly_handler.anomaly_detected(frame, fps)
                 if model.prediction == AnomalyType.NORMAL:
                     anomaly_handler.normal_detected()
 
@@ -195,6 +202,7 @@ class ModelThread(Thread):
             print("Camera Disconnected. Terminating thread")
         except Exception as e:
             print(e)
+            traceback.print_exc()
         finally:
             # if (
             #     model.prediction == AnomalyType.ANOMALY

@@ -18,10 +18,10 @@ class Camera:
         self.name = name
 
     def __hash__(self) -> int:
-        return hash(self.url)
+        return hash(self.name)
 
     def __eq__(self, o: object) -> bool:
-        return self.url == o.url
+        return self.name == o.name
 
     @classmethod
     def from_credentials(cls, ip, port, username, password, name):

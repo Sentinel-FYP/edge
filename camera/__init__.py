@@ -16,7 +16,7 @@ test_camera = None
 
 # Comment out the following code block for testing your camera
 test_camera = Camera.from_credentials(
-    "192.168.100.9", "8534", "admin", "admin", "Test Camera"
+    "192.168.100.9", "8534", "admin", "admin", "test_camera"
 )
 
 if test_camera:
@@ -87,6 +87,13 @@ def connect_to_cameras():
         except Exception:
             print(f"Failed to connect to {camera}")
             continue
+
+
+def get_connected_camera_by_name(name: str):
+    for cam in CONNECTED_CAMERAS:
+        if cam.name == name:
+            return cam
+    return None
 
 
 def get_local_ip():
