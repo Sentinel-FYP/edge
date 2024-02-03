@@ -1,6 +1,7 @@
 from .streamer import VideoStreamer
 from sio_client import SioClient
 from camera import get_connected_camera_by_name
+import asyncio
 
 STREAMERS: set[VideoStreamer] = set()
 # FOR TESTING VIDEO
@@ -31,3 +32,9 @@ def register_stream_events(sio: SioClient):
                 "webrtc:answer",
                 answer,
             )
+
+
+async def release_peer_connections():
+    coros = [streamer.close() for streamer in STREAMERS]
+    await asyncio.gather(*coros)
+    STREAMERS.clear()

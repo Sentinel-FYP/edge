@@ -26,8 +26,8 @@ class SioClient(AsyncClient):
         async def disconnect():
             print("socket disconnected from server")
 
-        # await sio.connect(f'{config.SERVER_URL}?token={token}')
-        await sio.connect(f"{config.SERVER_URL}")
+        # await sio.connect(f'{config.SERVER_URL}?token={token}', wait_timeout = 10)
+        await sio.connect(f"{config.SERVER_URL}", wait_timeout=10)
         return self
 
     async def close(self):

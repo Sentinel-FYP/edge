@@ -1,4 +1,3 @@
-# from inference import ModelThread, process_cameras
 from memory_profiler import profile
 import config
 from sio_client import SioClient
@@ -6,8 +5,7 @@ import asyncio
 import camera
 import asyncio
 from api import APIClient
-import os
-from streamer import STREAMERS, register_stream_events
+from streamer import register_stream_events, release_peer_connections
 from inference import process_cameras, kill_threads
 import traceback
 
@@ -16,14 +14,19 @@ sio: SioClient = None
 
 
 async def shutdown():
-    coros = [streamer.close() for streamer in STREAMERS]
-    await asyncio.gather(*coros)
-    STREAMERS.clear()
+    print("Shutting down gracefully")
+    release_peer_connections()
+    print("Closed all webrtc peer connections")
     kill_threads()
+    print("All threads killed")
+    camera.release_all_cams()
+    print("Released all cameras")
     if api_client:
         await api_client.close()
+        print("API Client Closed")
     if sio:
         await sio.close()
+        print("Socket Connection Closed")
 
 
 async def main():

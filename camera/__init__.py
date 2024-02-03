@@ -59,12 +59,12 @@ def register_camera_events(
             )
             traceback.print_exc()
 
-    @sio.event("cameras:discover")
+    @sio.on("cameras:discover")
     async def on_cameras_discover(data):
         print("cameras:discover")
         scan_cameras(config.SCAN_LIMIT)
 
-    @sio.event("cameras:discovered")
+    @sio.on("cameras:discovered")
     async def on_cameras_discovered(data):
         print("cameras:discovered")
         with open(config.CAMS_CACHE_FILE, "r") as f:
@@ -165,3 +165,8 @@ def cache_to_file(cams: list):
 def clear_cache():
     with open(config.CAMS_CACHE_FILE, "w") as f:
         f.write("")
+
+
+def release_all_cams():
+    for cam in CONNECTED_CAMERAS:
+        cam.disconnect()
