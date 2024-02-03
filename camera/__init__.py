@@ -8,7 +8,7 @@ from asyncio import AbstractEventLoop
 from inference import create_model_thread
 import traceback
 import config
-
+import events
 
 CAMERAS: list[Camera] = []
 CONNECTED_CAMERAS: list[Camera] = []
@@ -28,9 +28,9 @@ if test_camera:
 def register_camera_events(
     sio: SioClient, async_loop: AbstractEventLoop, api_client: APIClient
 ):
-    @sio.on("cameras:add")
+    @sio.on(events.CAMERAS_ADD)
     async def on_cameras_add(data):
-        print("cameras:add")
+        print(events.CAMERAS_ADD)
         try:
             ip, port = data["cameraIP"].split(":")
             new_camera = Camera.from_credentials(
@@ -45,13 +45,13 @@ def register_camera_events(
             print("Connected")
             create_model_thread(new_camera, sio, api_client, async_loop)
             await sio.emit(
-                "cameras:added",
+                events.CAMERAS_ADDED,
                 {"message": "Camera added", "deviceId": config.DEVICE_ID},
             )
         except Exception:
             print("connection failed")
             sio.emit(
-                "cameras:added",
+                events.ERROR,
                 {
                     "message": "Camera Connection Error",
                     "deviceId": config.DEVICE_ID,
@@ -59,18 +59,18 @@ def register_camera_events(
             )
             traceback.print_exc()
 
-    @sio.on("cameras:discover")
+    @sio.on(events.CAMERAS_DISCOVER)
     async def on_cameras_discover(data):
-        print("cameras:discover")
+        print(events.CAMERAS_DISCOVER)
         scan_cameras(config.SCAN_LIMIT)
 
-    @sio.on("cameras:discovered")
+    @sio.on(events.CAMERAS_DISCOVERED)
     async def on_cameras_discovered(data):
-        print("cameras:discovered")
+        print(events.CAMERAS_DISCOVERED)
         with open(config.CAMS_CACHE_FILE, "r") as f:
             discovered_cams = f.readlines()
             await sio.emit(
-                "cameras:discovered",
+                events.CAMERAS_DISCOVERED,
                 {"cams": discovered_cams, "deviceId": config.DEVICE_ID},
             )
 

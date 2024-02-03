@@ -2,6 +2,7 @@ from .streamer import VideoStreamer
 from sio_client import SioClient
 from camera import get_connected_camera_by_name
 import asyncio
+import events
 
 STREAMERS: set[VideoStreamer] = set()
 # FOR TESTING VIDEO
@@ -14,9 +15,9 @@ IS_RTSP_STREAM = False
 
 
 def register_stream_events(sio: SioClient):
-    @sio.on("webrtc:offer")
+    @sio.on(events.WEBRTC_OFFER)
     async def offer(data):
-        print("webrtc:offer")
+        print(events.WEBRTC_OFFER)
         cameraName = data["cameraName"]
         print("fetching camera", cameraName)
         camera = get_connected_camera_by_name(cameraName)
@@ -29,7 +30,7 @@ def register_stream_events(sio: SioClient):
             answer = await streamer.handle_offer(data)
             print("\nAnswer Created", answer)
             await sio.emit(
-                "webrtc:answer",
+                events.WEBRTC_ANSWER,
                 answer,
             )
 

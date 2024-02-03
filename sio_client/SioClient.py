@@ -1,5 +1,5 @@
 from socketio import AsyncClient
-import os
+import events
 import config
 
 
@@ -16,7 +16,7 @@ class SioClient(AsyncClient):
         @sio.event
         async def connect():
             print("socket connected to server")
-            await sio.emit("room:create", {"deviceId": config.DEVICE_ID})
+            await sio.emit(events.CREATE_ROOM, {"deviceId": config.DEVICE_ID})
 
         @sio.event
         async def message(data):
@@ -34,4 +34,4 @@ class SioClient(AsyncClient):
         await self.disconnect()
 
     async def send_alert(self, deviceId, localIP):
-        await self.emit("alert:send", {"deviceId": deviceId, "localIP": localIP})
+        await self.emit(events.ALERT_SEND, {"deviceId": deviceId, "localIP": localIP})
