@@ -1,4 +1,5 @@
 from .streamer import VideoStreamer
+from sio_client import SioClient
 
 STREAMERS: set[VideoStreamer] = set()
 # FOR TESTING VIDEO
@@ -10,7 +11,7 @@ IS_RTSP_STREAM = False
 # IS_RTSP_STREAM = True
 
 
-def register_stream_events(sio):
+def register_stream_events(sio: SioClient):
     @sio.on("webrtc:offer")
     async def offer(data):
         streamer = VideoStreamer(media_path=MEDIA_PATH, is_rtsp=IS_RTSP_STREAM)

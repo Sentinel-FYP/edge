@@ -11,8 +11,7 @@ from api import APIClient
 import asyncio
 import utils
 import tensorflow as tf
-
-# from camera import Camera, CameraDisconnected, TextColors
+from camera import Camera, CameraDisconnected, TextColors
 from queue import Queue
 from sio_client import SioClient
 
@@ -81,7 +80,7 @@ class AnomalyHandler:
 class ModelThread(Thread):
     def __init__(
         self,
-        camera,
+        camera: Camera,
         # tasks_queue: Queue,
         async_loop: asyncio.AbstractEventLoop,
         api_client: APIClient,
@@ -134,15 +133,15 @@ class ModelThread(Thread):
                 # if video_writer is not None:
                 #     video_writer.write(frame)
                 model.feed_frame(frame)
-                # Camera.put_text_overlay(
-                #     frame,
-                #     text=f"{model.prediction}: {model.probability*100:.2f}%",
-                #     color=(
-                #         TextColors.GREEN
-                #         if model.prediction == AnomalyType.NORMAL
-                #         else TextColors.RED
-                #     ),
-                # )
+                Camera.put_text_overlay(
+                    frame,
+                    text=f"{model.prediction}: {model.probability*100:.2f}%",
+                    color=(
+                        TextColors.GREEN
+                        if model.prediction == AnomalyType.NORMAL
+                        else TextColors.RED
+                    ),
+                )
                 if fc % 100 == 0:
                     self.logger.info(
                         f"prediction : {model.prediction} | probability : {model.probability}"
@@ -192,7 +191,7 @@ class ModelThread(Thread):
                 #     # )
                 #     # self.tasks_queue.put(log_task)
                 #     log_sent = True
-        except Exception:
+        except CameraDisconnected:
             print("Camera Disconnected. Terminating thread")
         except Exception as e:
             print(e)

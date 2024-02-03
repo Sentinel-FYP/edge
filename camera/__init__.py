@@ -1,23 +1,20 @@
+from .Camera import Camera, CameraDisconnected, TextColors
 import socket
 import tqdm
-from .Camera import Camera
-import api
-import sio_client
-
-# from inference import ModelThread, MODEL_THREADS
-import inference
-import os
+from api import APIClient
+from sio_client import SioClient
 from asyncio import AbstractEventLoop
+from inference import create_model_thread
+import os
 import traceback
 
 CAMS_CACHE_FILE = "data/cams.txt"
 CAMERAS: list[Camera] = []
 CONNECTED_CAMERAS: list[Camera] = []
-MODEL_THREADS = {}
 
 
 def register_camera_events(
-    sio: sio_client.SioClient, async_loop: AbstractEventLoop, api_client: api.APIClient
+    sio: SioClient, async_loop: AbstractEventLoop, api_client: APIClient
 ):
     @sio.on("cameras:add")
     def on_cameras_add(data):
@@ -34,13 +31,7 @@ def register_camera_events(
             print(f"Connecting to new Camera {new_camera}")
             new_camera.connect()
             print("Connected")
-            new_thread = inference.ModelThread(
-                camera=new_camera,
-                async_loop=async_loop,
-                api_client=api_client,
-            )
-            new_thread.start()
-            MODEL_THREADS[new_camera] = new_thread
+            create_model_thread(new_camera, sio, api_client, async_loop)
             sio.send_camera_added(new_camera)
         except Exception:
             print("connection failed")
@@ -54,7 +45,7 @@ def register_camera_events(
             traceback.print_exc()
 
 
-def fetch_registered_cameras(api_client: api.APIClient):
+def fetch_registered_cameras(api_client: APIClient):
     try:
         print("Fetching registered cameras from database...")
         camerasCredentials = api_client.device["cameras"]
