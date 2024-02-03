@@ -35,9 +35,3 @@ class SioClient(AsyncClient):
 
     async def send_alert(self, deviceId, localIP):
         await self.emit("alert:send", {"deviceId": deviceId, "localIP": localIP})
-
-    async def send_camera_added(self, camera):
-        await self.emit(
-            "cameras:added",
-            {"message": "Camera added", "deviceId": config.DEVICE_ID},
-        )
