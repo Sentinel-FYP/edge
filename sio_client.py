@@ -1,22 +1,16 @@
-import socketio
-import asyncio
-import dotenv
+from socketio import AsyncClient
 import os
-import camera
-from queue import Queue
-
-import json
 
 
-class SioClient:
+class SioClient(AsyncClient):
     def __init__(self):
-        self.sio = socketio.AsyncClient()
+        super().__init__()
 
     @classmethod
     async def create(cls, token):
         # api_client.disconnect()
         self = cls()
-        sio = self.sio
+        sio = self
 
         @sio.event
         async def connect():
@@ -32,17 +26,17 @@ class SioClient:
             print("socket disconnected from server")
 
         # camera events
-        @sio.on("cameras:discover")
-        async def on_cameras_discover(data):
-            print("cameras:discover")
-            cameras = []
-            with open(camera.CAMS_CACHE_FILE) as f:
-                for line in f:
-                    cameras.append(line.strip())
-            await sio.emit(
-                "cameras:discovered",
-                {"cameras": cameras, "deviceId": os.getenv("DEVICE_ID")},
-            )
+        # @sio.on("cameras:discover")
+        # async def on_cameras_discover(data):
+        #     print("cameras:discover")
+        #     cameras = []
+        #     with open(camera.CAMS_CACHE_FILE) as f:
+        #         for line in f:
+        #             cameras.append(line.strip())
+        #     await sio.emit(
+        #         "cameras:discovered",
+        #         {"cameras": cameras, "deviceId": os.getenv("DEVICE_ID")},
+        #     )
 
         # @sio.on("cameras:add")
         # async def on_cameras_add(data):
@@ -64,7 +58,13 @@ class SioClient:
         return self
 
     async def close(self):
-        await self.sio.disconnect()
+        await self.disconnect()
 
     async def send_alert(self, deviceId, localIP):
-        await self.sio.emit("alert:send", {"deviceId": deviceId, "localIP": localIP})
+        await self.emit("alert:send", {"deviceId": deviceId, "localIP": localIP})
+
+    async def send_camera_added(self, camera):
+        await self.emit(
+            "cameras:added",
+            {"message": "Camera added", "deviceId": os.getenv("DEVICE_ID")},
+        )
