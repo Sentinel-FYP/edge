@@ -11,7 +11,7 @@ class APIClient:
         with open("TOKEN", "r") as file:
             self.auth_token = file.read()
         self.client.headers["Authorization"] = f"Bearer {self.auth_token}"
-        self.deviceId = config.DEVICE_ID
+        self.deviceID = config.DEVICE_ID
         self.deviceMongoId = None
         self.device = None
 
@@ -19,7 +19,7 @@ class APIClient:
     async def create(cls):
         self = cls()
         # validate if token is valid
-        response = await self.client.get(f"edgeDevices/{self.deviceId}")
+        response = await self.client.get(f"edgeDevices/{self.deviceID}")
         response = response.json()
         if type(response) != list and response["message"] == "TOKEN_ERROR":
             print("TOKEN EXPIRED: GETTING NEW TOKEN")

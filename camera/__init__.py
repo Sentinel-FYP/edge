@@ -46,7 +46,7 @@ def register_camera_events(
             create_model_thread(new_camera, sio, api_client, async_loop)
             await sio.emit(
                 events.CAMERAS_ADDED,
-                {"message": "Camera added", "deviceId": config.DEVICE_ID},
+                {"message": "Camera added", "deviceID": config.DEVICE_ID},
             )
         except Exception:
             print("connection failed")
@@ -54,7 +54,7 @@ def register_camera_events(
                 events.ERROR,
                 {
                     "message": "Camera Connection Error",
-                    "deviceId": config.DEVICE_ID,
+                    "deviceID": config.DEVICE_ID,
                 },
             )
             traceback.print_exc()
@@ -71,7 +71,7 @@ def register_camera_events(
             discovered_cams = f.readlines()
             await sio.emit(
                 events.CAMERAS_DISCOVERED,
-                {"cams": discovered_cams, "deviceId": config.DEVICE_ID},
+                {"cams": discovered_cams, "deviceID": config.DEVICE_ID},
             )
 
 
