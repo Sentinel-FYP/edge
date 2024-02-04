@@ -43,14 +43,20 @@ def register_camera_events(
             print(f"Connecting to new Camera {new_camera}")
             new_camera.connect()
             print("Connected")
-            create_model_thread(new_camera, sio, api_client, async_loop)
             await sio.emit(
                 events.CAMERAS_ADDED,
-                {"message": "Camera added", "deviceID": config.DEVICE_ID},
+                {
+                    "cameraName": new_camera.name,
+                    "cameraIP": str(new_camera.ip) + ":" + str(new_camera.port),
+                    "username": new_camera.username,
+                    "password": new_camera.password,
+                    "deviceID": config.DEVICE_ID,
+                },
             )
+            create_model_thread(new_camera, sio, api_client, async_loop)
         except Exception:
             print("connection failed")
-            sio.emit(
+            await sio.emit(
                 events.ERROR,
                 {
                     "message": "Camera Connection Error",
@@ -150,13 +156,17 @@ async def scan_cameras(limit, sio: SioClient):
                 s.settimeout(1)
                 s.connect((str(ipaddr), port))
                 cam = str(ipaddr) + ":" + str(port)
+                print("Camera found at: ", cam)
+                print("sending event")
                 await sio.emit(
                     events.CAMERA_DISCOVED_NEW,
-                    {"camera": cam},
+                    {"camera": cam, "deviceID": config.DEVICE_ID},
                 )
                 cams.append(str(ipaddr) + ":" + str(port) + "\n")
             except socket.error:
                 continue
+            finally:
+                s.close()
     cache_to_file(cams)
 
 
