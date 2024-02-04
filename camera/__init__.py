@@ -62,7 +62,7 @@ def register_camera_events(
     @sio.on(events.CAMERAS_DISCOVER)
     async def on_cameras_discover(data):
         print(events.CAMERAS_DISCOVER)
-        scan_cameras(config.SCAN_LIMIT)
+        await scan_cameras(config.SCAN_LIMIT, sio)
 
     @sio.on(events.CAMERAS_DISCOVERED)
     async def on_cameras_discovered(data):
@@ -138,7 +138,7 @@ def generate_ip_range(limit):
         yield ip
 
 
-def scan_cameras(limit):
+async def scan_cameras(limit, sio: SioClient):
     cams = []
     for ipaddr in list(generate_ip_range(limit)):
         print("scanning port for ip: ", ipaddr)
@@ -149,6 +149,11 @@ def scan_cameras(limit):
                 )
                 s.settimeout(1)
                 s.connect((str(ipaddr), port))
+                cam = str(ipaddr) + ":" + str(port)
+                await sio.emit(
+                    events.CAMERA_DISCOVED_NEW,
+                    {"camera": cam},
+                )
                 cams.append(str(ipaddr) + ":" + str(port) + "\n")
             except socket.error:
                 continue

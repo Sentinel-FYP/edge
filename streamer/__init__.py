@@ -41,7 +41,7 @@ def register_stream_events(sio: SioClient):
         clipFileName = data["clipFileName"]
         clipPath = os.path.join(os.getcwd(), clipFileName)
         if not os.path.isfile(clipPath):
-            sio.send_error(f"Clip not found at {clipPath}")
+            await sio.send_error(f"Clip not found at {clipPath}")
         else:
             streamer = VideoStreamer(media_path=clipPath, is_rtsp=False)
             STREAMERS.add(streamer)
