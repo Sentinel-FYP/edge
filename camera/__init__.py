@@ -16,7 +16,7 @@ test_camera = None
 
 # Comment out the following code block for testing your camera
 test_camera = Camera.from_credentials(
-    "192.168.100.9", "8534", "admin", "admin", "test_camera"
+    "192.168.1.7", "8554", "admin", "admin", "test_camera"
 )
 
 if test_camera:
