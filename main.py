@@ -1,13 +1,11 @@
-# from inference import ModelThread, process_cameras
 from memory_profiler import profile
-from dotenv import load_dotenv
+import config
 from sio_client import SioClient
 import asyncio
 import camera
 import asyncio
 from api import APIClient
-import os
-from streamer import STREAMERS, register_stream_events
+from streamer import register_stream_events, release_peer_connections
 from inference import process_cameras, kill_threads
 import traceback
 
@@ -16,21 +14,25 @@ sio: SioClient = None
 
 
 async def shutdown():
-    coros = [streamer.close() for streamer in STREAMERS]
-    await asyncio.gather(*coros)
-    STREAMERS.clear()
+    print("Shutting down gracefully")
+    release_peer_connections()
+    print("Closed all webrtc peer connections")
     kill_threads()
+    print("All threads killed")
+    camera.release_all_cams()
+    print("Released all cameras")
     if api_client:
         await api_client.close()
+        print("API Client Closed")
     if sio:
         await sio.close()
+        print("Socket Connection Closed")
 
 
 async def main():
-    load_dotenv(override=True)
-    print("SERVER_URL", os.getenv("SERVER_URL"))
-    print("BASE_URL", os.getenv("BASE_URL"))
-    print("DEVICE_ID", os.getenv("DEVICE_ID"))
+    print("SERVER_URL", config.SERVER_URL)
+    print("BASE_URL", config.BASE_URL)
+    print("DEVICE_ID", config.DEVICE_ID)
     api_client = await APIClient.create()
     token = api_client.auth_token
     sio = await SioClient.create(token=token)
@@ -43,7 +45,7 @@ async def main():
     # Events for streaming video
     register_stream_events(sio)
     # Run inference on connected cameras in threads
-    process_cameras(camera.CONNECTED_CAMERAS, sio, asyncio.get_event_loop(), api_client)
+    # process_cameras(camera.CONNECTED_CAMERAS, sio, asyncio.get_event_loop(), api_client)
 
 
 if __name__ == "__main__":
