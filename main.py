@@ -8,6 +8,7 @@ from api import APIClient
 from streamer import register_stream_events, release_peer_connections
 from inference import process_cameras, kill_threads
 import traceback
+from httpx import ConnectError
 
 api_client: APIClient = None
 sio: SioClient = None
@@ -57,6 +58,9 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("Keyboard Interrupt, exiting")
         pass
+    except ConnectError:
+        print("Connection Error")
+        print("Server is offline")
     except Exception:
         traceback.print_exc()
     finally:
