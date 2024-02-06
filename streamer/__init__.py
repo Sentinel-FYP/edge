@@ -3,6 +3,7 @@ from sio_client import SioClient
 from camera import get_connected_camera_by_name
 import asyncio
 import events
+import os
 
 STREAMERS: set[VideoStreamer] = set()
 # FOR TESTING VIDEO
@@ -26,6 +27,23 @@ def register_stream_events(sio: SioClient):
             return
         else:
             streamer = VideoStreamer(media_path=camera.url, is_rtsp=True)
+            STREAMERS.add(streamer)
+            answer = await streamer.handle_offer(data)
+            print("\nAnswer Created", answer)
+            await sio.emit(
+                events.WEBRTC_ANSWER,
+                answer,
+            )
+
+    @sio.on(events.WEBRTC_OFFER_CLIP)
+    async def offer(data):
+        print(events.WEBRTC_OFFER)
+        clipFileName = data["clipFileName"]
+        clipPath = os.path.join(os.getcwd(), clipFileName)
+        if not os.path.isfile(clipPath):
+            await sio.send_error(f"Clip not found at {clipPath}")
+        else:
+            streamer = VideoStreamer(media_path=clipPath, is_rtsp=False)
             STREAMERS.add(streamer)
             answer = await streamer.handle_offer(data)
             print("\nAnswer Created", answer)

@@ -15,7 +15,7 @@ sio: SioClient = None
 
 async def shutdown():
     print("Shutting down gracefully")
-    release_peer_connections()
+    await release_peer_connections()
     print("Closed all webrtc peer connections")
     kill_threads()
     print("All threads killed")

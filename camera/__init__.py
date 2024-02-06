@@ -47,18 +47,24 @@ def register_camera_events(
             print(f"Connecting to new Camera {new_camera}")
             new_camera.connect()
             print("Connected")
-            create_model_thread(new_camera, sio, api_client, async_loop)
             await sio.emit(
                 events.CAMERAS_ADDED,
-                {"message": "Camera added", "deviceId": config.DEVICE_ID},
+                {
+                    "cameraName": new_camera.name,
+                    "cameraIP": str(new_camera.ip) + ":" + str(new_camera.port),
+                    "username": new_camera.username,
+                    "password": new_camera.password,
+                    "deviceID": config.DEVICE_ID,
+                },
             )
+            create_model_thread(new_camera, sio, api_client, async_loop)
         except Exception:
             print("connection failed")
-            sio.emit(
+            await sio.emit(
                 events.ERROR,
                 {
                     "message": "Camera Connection Error",
-                    "deviceId": config.DEVICE_ID,
+                    "deviceID": config.DEVICE_ID,
                 },
             )
             traceback.print_exc()
@@ -66,7 +72,7 @@ def register_camera_events(
     @sio.on(events.CAMERAS_DISCOVER)
     async def on_cameras_discover(data):
         print(events.CAMERAS_DISCOVER)
-        scan_cameras(config.SCAN_LIMIT)
+        await scan_cameras(config.SCAN_LIMIT, sio)
 
     @sio.on(events.CAMERAS_DISCOVERED)
     async def on_cameras_discovered(data):
@@ -75,7 +81,7 @@ def register_camera_events(
             discovered_cams = f.readlines()
             await sio.emit(
                 events.CAMERAS_DISCOVERED,
-                {"cams": discovered_cams, "deviceId": config.DEVICE_ID},
+                {"cams": discovered_cams, "deviceID": config.DEVICE_ID},
             )
 
 
@@ -142,7 +148,7 @@ def generate_ip_range(limit):
         yield ip
 
 
-def scan_cameras(limit):
+async def scan_cameras(limit, sio: SioClient):
     cams = []
     for ipaddr in list(generate_ip_range(limit)):
         print("scanning port for ip: ", ipaddr)
@@ -153,9 +159,18 @@ def scan_cameras(limit):
                 )
                 s.settimeout(1)
                 s.connect((str(ipaddr), port))
+                cam = str(ipaddr) + ":" + str(port)
+                print("Camera found at: ", cam)
+                print("sending event")
+                await sio.emit(
+                    events.CAMERA_DISCOVED_NEW,
+                    {"camera": cam, "deviceID": config.DEVICE_ID},
+                )
                 cams.append(str(ipaddr) + ":" + str(port) + "\n")
             except socket.error:
                 continue
+            finally:
+                s.close()
     cache_to_file(cams)
 
 

@@ -3,6 +3,7 @@ import argparse
 import time
 import json
 from enum import Enum
+import socket
 
 
 class TextColors(Enum):
@@ -11,11 +12,24 @@ class TextColors(Enum):
 
 
 class Camera:
-    def __init__(self, url, should_reconnect=True, name=None) -> None:
+    def __init__(
+        self,
+        url,
+        should_reconnect=True,
+        name=None,
+        ip=None,
+        port=None,
+        username=None,
+        password=None,
+    ) -> None:
         self.url = url
         self.should_reconnect = should_reconnect
         self.suspend_time = 4
         self.name = name
+        self.ip = ip
+        self.port = int(port)
+        self.username = username
+        self.password = password
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -26,9 +40,23 @@ class Camera:
     @classmethod
     def from_credentials(cls, ip, port, username, password, name):
         url = f"rtsp://{username}:{password}@{ip}:{port}/"
-        return cls(url, name=name)
+        return cls(
+            url, name=name, ip=ip, port=port, username=username, password=password
+        )
+
+    def is_online(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(1)
+        try:
+            s.connect((self.ip, self.port))
+            s.close()
+            return True
+        except socket.error:
+            return False
 
     def connect(self):
+        if not self.is_online():
+            raise Exception("Camera is offline")
         self.cap = cv2.VideoCapture(self.url)
         if not self.cap.isOpened():
             raise Exception("Video source not found")

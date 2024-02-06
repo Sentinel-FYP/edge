@@ -16,7 +16,7 @@ class SioClient(AsyncClient):
         @sio.event
         async def connect():
             print("socket connected to server")
-            await sio.emit(events.CREATE_ROOM, {"deviceId": config.DEVICE_ID})
+            await sio.emit(events.CREATE_ROOM, {"deviceID": config.DEVICE_ID})
 
         @sio.event
         async def message(data):
@@ -33,5 +33,8 @@ class SioClient(AsyncClient):
     async def close(self):
         await self.disconnect()
 
-    async def send_alert(self, deviceId, localIP):
-        await self.emit(events.ALERT_SEND, {"deviceId": deviceId, "localIP": localIP})
+    async def send_alert(self, deviceID, localIP):
+        await self.emit(events.ALERT_SEND, {"deviceID": deviceID, "localIP": localIP})
+
+    async def send_error(self, message):
+        await self.emit(events.ERROR, {"message": message})

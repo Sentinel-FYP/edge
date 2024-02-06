@@ -67,7 +67,7 @@ class VideoStreamer:
         return {
             "sdp": self.pc.localDescription.sdp,
             "type": self.pc.localDescription.type,
-            "deviceId": config.DEVICE_ID,
+            "deviceID": config.DEVICE_ID,
         }
 
     async def close(self):
