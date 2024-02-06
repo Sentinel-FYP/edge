@@ -1,5 +1,4 @@
 import httpx
-import os
 from .models import AnomalyLog
 import utils
 import config

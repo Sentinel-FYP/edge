@@ -30,6 +30,7 @@ async def shutdown():
 
 
 async def main():
+    global api_client, sio
     print("SERVER_URL", config.SERVER_URL)
     print("BASE_URL", config.BASE_URL)
     print("DEVICE_ID", config.DEVICE_ID)

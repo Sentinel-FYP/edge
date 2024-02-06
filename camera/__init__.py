@@ -21,9 +21,9 @@ else:
     test_camera = None
 
 # Comment out the following code block for testing your camera
-test_camera = Camera.from_credentials(
-    "192.168.1.7", "8554", "admin", "admin", "test_camera"
-)
+# test_camera = Camera.from_credentials(
+#     "192.168.1.7", "8554", "admin", "admin", "test_camera"
+# )
 
 if test_camera:
     CAMERAS.append(test_camera)
@@ -74,9 +74,9 @@ def register_camera_events(
         print(events.CAMERAS_DISCOVER)
         await scan_cameras(config.SCAN_LIMIT, sio)
 
-    @sio.on(events.CAMERAS_DISCOVERED)
-    async def on_cameras_discovered(data):
-        print(events.CAMERAS_DISCOVERED)
+    @sio.on(events.CAMERAS_DISCOVERED_GET)
+    async def on_cameras_discovered_get(data):
+        print(events.CAMERAS_DISCOVERED_GET)
         with open(config.CAMS_CACHE_FILE, "r") as f:
             discovered_cams = f.readlines()
             await sio.emit(
@@ -157,18 +157,18 @@ async def scan_cameras(limit, sio: SioClient):
                 s = socket.socket(
                     socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP
                 )
-                s.settimeout(1)
+                s.settimeout(config.SCAN_TIMEOUT)
                 s.connect((str(ipaddr), port))
                 cam = str(ipaddr) + ":" + str(port)
                 print("Camera found at: ", cam)
-                print("sending event")
+                print("sending event " + events.CAMERAS_DISCOVED_NEW)
                 await sio.emit(
-                    events.CAMERA_DISCOVED_NEW,
+                    events.CAMERAS_DISCOVED_NEW,
                     {"camera": cam, "deviceID": config.DEVICE_ID},
                 )
                 cams.append(str(ipaddr) + ":" + str(port) + "\n")
             except socket.error:
-                continue
+                pass
             finally:
                 s.close()
     cache_to_file(cams)
