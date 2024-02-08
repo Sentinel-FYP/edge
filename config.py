@@ -15,3 +15,5 @@ SCAN_TIMEOUT = 1
 
 # To prevent using test camera uncomment below line
 TEST_CAMERA_CONFIG = None
+
+LOCAL_IP = "192.168.100.1"

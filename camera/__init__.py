@@ -127,11 +127,11 @@ def get_connected_camera_by_name(name: str):
 
 
 def get_network_ip():
-    # Get the local hostname and IP address
-    hostname = socket.gethostname()
-    ip = socket.gethostbyname(hostname)
-    ip = ip[: ip.rfind(".")] + ".0"
-    return ipaddress.ip_address(ip)
+    # # Get the local hostname and IP address
+    # hostname = socket.gethostname()
+    # ip = socket.gethostbyname(hostname)
+    # ip = ip[: ip.rfind(".")] + ".0"
+    return ipaddress.ip_address(config.LOCAL_IP)
 
 
 def increment_ip(ip):
