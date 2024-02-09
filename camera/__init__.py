@@ -81,7 +81,7 @@ def register_camera_events(
             discovered_cams = f.readlines()
             await sio.emit(
                 events.CAMERAS_DISCOVERED,
-                {"cams": discovered_cams, "deviceID": config.DEVICE_ID},
+                {"cameras": discovered_cams, "deviceID": config.DEVICE_ID},
             )
 
 

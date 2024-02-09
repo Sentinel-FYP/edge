@@ -11,9 +11,9 @@ SCAN_LIMIT = 10
 SCAN_TIMEOUT = 1
 
 # (ip, port, username, password, camera_name)
-# TEST_CAMERA_CONFIG = ("192.168.100.9", "8534", "admin", "admin", "test_camera")
+# TEST_CAMERA_CONFIG = ("192.168.1.8", "8554", "admin", "admin", "test_camera")
 
 # To prevent using test camera uncomment below line
 TEST_CAMERA_CONFIG = None
 
-LOCAL_IP = "192.168.100.1"
+LOCAL_IP = "192.168.1.0"
