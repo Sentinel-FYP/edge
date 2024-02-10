@@ -17,15 +17,18 @@ SCAN_LIMIT = int(os.getenv("SCAN_LIMIT")) or 10
 SCAN_TIMEOUT = int(os.getenv("SCAN_TIMEOUT")) or 1
 
 # (cameraIP, username, password, camera_name)
-TEST_CAMERA_CONFIG = (
-    os.getenv("CAM_IP") or "192.168.1.8:8554",
-    os.getenv("CAM_ID") or "admin",
-    os.getenv("CAM_PASS") or "admin",
-    "test_camera",
-)
+USE_TEST_CAM = os.getenv("USE_TEST_CAM") == "True" or False
+if USE_TEST_CAM:
+    TEST_CAMERA_CONFIG = (
+        os.getenv("CAM_IP") or "192.168.1.8:8554",
+        os.getenv("CAM_ID") or "admin",
+        os.getenv("CAM_PASS") or "admin",
+        "test_camera",
+    )
+else:
+    TEST_CAMERA_CONFIG = None
 
 # To prevent using test camera uncomment below line
-# TEST_CAMERA_CONFIG = None
 
 LOCAL_IP = os.getenv("LOCAL_IP") or "192.168.1.0"
 
