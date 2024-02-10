@@ -4,8 +4,9 @@ from camera import get_connected_camera_by_name
 import asyncio
 import events
 import os
+from typing import Set
 
-STREAMERS: set[VideoStreamer] = set()
+STREAMERS: Set[VideoStreamer] = set()
 # FOR TESTING VIDEO
 MEDIA_PATH = "videos/normal_long_long.mp4"
 IS_RTSP_STREAM = False
