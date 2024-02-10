@@ -12,7 +12,7 @@ import asyncio
 import utils
 import tensorflow as tf
 from camera import Camera, CameraDisconnected, TextColors
-from queue import Queue
+from config import Paths
 from sio_client import SioClient
 import traceback
 
@@ -110,11 +110,11 @@ class ModelThread(Thread):
         self.logger.info("Loading Model")
         if utils.get_system_ram() > 8 and tf.test.is_gpu_available(cuda_only=True):
             model = GPUModel(
-                "saved_models/a0_stream_5.0", clip_length=64, output_size=(172, 172)
+                Paths.GPU_MODEL.value, clip_length=64, output_size=(172, 172)
             )
         else:
             model = LiteModel(
-                "saved_models/a0_stream_5.0.tflite",
+                Paths.TF_LITE_MODEL.value,
                 clip_length=64,
                 output_size=(172, 172),
             )

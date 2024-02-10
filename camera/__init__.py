@@ -8,6 +8,7 @@ from asyncio import AbstractEventLoop
 from inference import create_model_thread
 import traceback
 import config
+from config import Paths
 import events
 
 CAMERAS: list[Camera] = []
@@ -77,7 +78,7 @@ def register_camera_events(
     @sio.on(events.CAMERAS_DISCOVERED_GET)
     async def on_cameras_discovered_get(data):
         print(events.CAMERAS_DISCOVERED_GET)
-        with open(config.CAMS_CACHE_FILE, "r") as f:
+        with open(Paths.CAMS_CACHE_FILE.value, "r") as f:
             discovered_cams = f.readlines()
             await sio.emit(
                 events.CAMERAS_DISCOVERED,
@@ -176,13 +177,13 @@ async def scan_cameras(limit, sio: SioClient):
 
 def cache_to_file(cams: list):
     clear_cache()
-    with open(config.CAMS_CACHE_FILE, "w") as f:
+    with open(Paths.CAMS_CACHE_FILE.value, "w") as f:
         for cam in cams:
             f.write(cam + "\n")
 
 
 def clear_cache():
-    with open(config.CAMS_CACHE_FILE, "w") as f:
+    with open(Paths.CAMS_CACHE_FILE.value, "w") as f:
         f.write("")
 
 

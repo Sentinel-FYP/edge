@@ -7,7 +7,6 @@ SERVER_URL = "http://13.51.86.179:5500"
 BASE_URL = f"{SERVER_URL}/api/"
 
 # Config for camera scanning
-CAMS_CACHE_FILE = "data/cams.txt"
 CAM_PORTS = [8534, 8554, 554]
 SCAN_LIMIT = 10
 # Timeout for client to wait for camera to respond
