@@ -217,6 +217,7 @@ class ModelThread(Thread):
             #         self.api_client.post_anomaly_log(anomaly_log)
             #     )
             #     self.tasks_queue.put(log_task)
+            anomaly_handler.normal_detected()
             end = timer()
             self.logger.info(
                 f"total_frames : {fc} | time_taken : {end - start} | latency : {(end - start) / fc}"
