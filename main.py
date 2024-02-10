@@ -9,6 +9,7 @@ from streamer import register_stream_events, release_peer_connections
 from inference import process_cameras, kill_threads
 import traceback
 from httpx import ConnectError
+from config import Paths
 
 api_client: APIClient = None
 sio: SioClient = None
@@ -31,6 +32,7 @@ async def shutdown():
 
 
 async def main():
+    Paths.create_paths()
     global api_client, sio
     print("SERVER_URL", config.SERVER_URL)
     print("BASE_URL", config.BASE_URL)
