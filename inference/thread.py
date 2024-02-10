@@ -110,11 +110,11 @@ class ModelThread(Thread):
         self.logger.info("Loading Model")
         if utils.get_system_ram() > 8 and tf.test.is_gpu_available(cuda_only=True):
             model = GPUModel(
-                Paths.GPU_MODEL.value, clip_length=64, output_size=(172, 172)
+                str(Paths.GPU_MODEL.value), clip_length=64, output_size=(172, 172)
             )
         else:
             model = LiteModel(
-                Paths.TF_LITE_MODEL.value,
+                str(Paths.TF_LITE_MODEL.value),
                 clip_length=64,
                 output_size=(172, 172),
             )

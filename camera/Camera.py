@@ -17,8 +17,7 @@ class Camera:
         url,
         should_reconnect=True,
         name=None,
-        ip=None,
-        port=None,
+        cameraIP=None,
         username=None,
         password=None,
     ) -> None:
@@ -26,8 +25,7 @@ class Camera:
         self.should_reconnect = should_reconnect
         self.suspend_time = 4
         self.name = name
-        self.ip = ip
-        self.port = int(port)
+        self.cameraIP = cameraIP
         self.username = username
         self.password = password
 
@@ -38,17 +36,19 @@ class Camera:
         return self.name == o.name
 
     @classmethod
-    def from_credentials(cls, ip, port, username, password, name):
-        url = f"rtsp://{username}:{password}@{ip}:{port}/"
+    def from_credentials(cls, cameraIP: str, username: str, password: str, name):
+        url = f"rtsp://{username.strip()}:{password.strip()}@{cameraIP}/"
         return cls(
-            url, name=name, ip=ip, port=port, username=username, password=password
+            url, name=name, cameraIP=cameraIP, username=username, password=password
         )
 
     def is_online(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(1)
         try:
-            s.connect((self.ip, self.port))
+            ip, port = self.cameraIP.split(":")
+            port = int(port)
+            s.connect((ip, port))
             s.close()
             return True
         except socket.error:
@@ -56,6 +56,7 @@ class Camera:
 
     def connect(self):
         if not self.is_online():
+            print(f"{self} is offline")
             raise Exception("Camera is offline")
         self.cap = cv2.VideoCapture(self.url)
         if not self.cap.isOpened():

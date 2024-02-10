@@ -3,7 +3,7 @@ from enum import Enum
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
+load_dotenv(override=True)
 
 DEVICE_ID = os.getenv("DEVICE_ID") or "abc"
 # SERVER_URL = "http://localhost:5000"
@@ -16,17 +16,16 @@ SCAN_LIMIT = int(os.getenv("SCAN_LIMIT")) or 10
 # Timeout for client to wait for camera to respond
 SCAN_TIMEOUT = int(os.getenv("SCAN_TIMEOUT")) or 1
 
-# (ip, port, username, password, camera_name)
-# TEST_CAMERA_CONFIG = (
-#     os.getenv("CAM_IP") or "192.168.1.8",
-#     os.getenv("CAM_PORT") or "8554",
-#     os.getenv("CAM_ID") or "admin",
-#     os.getenv("CAM_PASS") or "admin",
-#     "test_camera",
-# )
+# (cameraIP, username, password, camera_name)
+TEST_CAMERA_CONFIG = (
+    os.getenv("CAM_IP") or "192.168.1.8:8554",
+    os.getenv("CAM_ID") or "admin",
+    os.getenv("CAM_PASS") or "admin",
+    "test_camera",
+)
 
 # To prevent using test camera uncomment below line
-TEST_CAMERA_CONFIG = None
+# TEST_CAMERA_CONFIG = None
 
 LOCAL_IP = os.getenv("LOCAL_IP") or "192.168.1.0"
 

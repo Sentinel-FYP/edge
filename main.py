@@ -49,7 +49,7 @@ async def main():
     # Events for streaming video
     register_stream_events(sio)
     # Run inference on connected cameras in threads
-    # process_cameras(camera.CONNECTED_CAMERAS, sio, asyncio.get_event_loop(), api_client)
+    process_cameras(camera.CONNECTED_CAMERAS, sio, asyncio.get_event_loop(), api_client)
 
 
 if __name__ == "__main__":

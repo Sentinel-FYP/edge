@@ -22,11 +22,6 @@ if config.TEST_CAMERA_CONFIG:
 else:
     test_camera = None
 
-# Comment out the following code block for testing your camera
-# test_camera = Camera.from_credentials(
-#     "192.168.1.7", "8554", "admin", "admin", "test_camera"
-# )
-
 if test_camera:
     CAMERAS.append(test_camera)
 
@@ -38,10 +33,8 @@ def register_camera_events(
     async def on_cameras_add(data):
         print(events.CAMERAS_ADD)
         try:
-            ip, port = data["cameraIP"].split(":")
-            new_camera = Camera.from_credentials(
-                ip=ip,
-                port=port,
+            new_camera: Camera = Camera.from_credentials(
+                cameraIP=data["cameraIP"],
                 username=data["username"],
                 password=data["password"],
                 name="New Camera",
@@ -53,7 +46,7 @@ def register_camera_events(
                 events.CAMERAS_ADDED,
                 {
                     "cameraName": new_camera.name,
-                    "cameraIP": str(new_camera.ip) + ":" + str(new_camera.port),
+                    "cameraIP": str(new_camera.cameraIP),
                     "username": new_camera.username,
                     "password": new_camera.password,
                     "deviceID": config.DEVICE_ID,
@@ -94,8 +87,7 @@ def fetch_registered_cameras(api_client: APIClient):
         print("Total Registered Cameras", len(camerasCredentials))
         for cred in camerasCredentials:
             camera = Camera.from_credentials(
-                ip=cred["localIP"],
-                port=cred["port"],
+                cameraIP=cred["cameraIP"],
                 username=cred["username"],
                 password=cred["password"],
                 name=cred["cameraName"],
@@ -116,8 +108,9 @@ def connect_to_cameras():
             camera.connect()
             CONNECTED_CAMERAS.append(camera)
             print("Connected")
-        except Exception:
+        except Exception as e:
             print(f"Failed to connect to {camera}")
+            print(e)
             continue
 
 
@@ -154,11 +147,9 @@ async def scan_cameras(limit, sio: SioClient):
     cams = []
     for ipaddr in list(generate_ip_range(limit)):
         print("scanning port for ip: ", ipaddr)
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
         for port in config.CAM_PORTS:
             try:
-                s = socket.socket(
-                    socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP
-                )
                 s.settimeout(config.SCAN_TIMEOUT)
                 s.connect((str(ipaddr), port))
                 cam = str(ipaddr) + ":" + str(port)
