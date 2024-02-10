@@ -1,24 +1,34 @@
 from pathlib import Path
 from enum import Enum
+from dotenv import load_dotenv
+import os
 
-DEVICE_ID = "abc"
+load_dotenv()
+
+DEVICE_ID = os.getenv("DEVICE_ID") or "abc"
 # SERVER_URL = "http://localhost:5000"
-SERVER_URL = "http://13.51.86.179:5500"
+SERVER_URL = os.getenv("SERVER_URL") or "http://13.51.86.179:5500"
 BASE_URL = f"{SERVER_URL}/api/"
 
 # Config for camera scanning
 CAM_PORTS = [8534, 8554, 554]
-SCAN_LIMIT = 10
+SCAN_LIMIT = os.getenv("SCAN_LIMIT") or 10
 # Timeout for client to wait for camera to respond
-SCAN_TIMEOUT = 1
+SCAN_TIMEOUT = os.getenv("SCAN_TIMEOUT") or 1
 
 # (ip, port, username, password, camera_name)
-# TEST_CAMERA_CONFIG = ("192.168.1.8", "8554", "admin", "admin", "test_camera")
+# TEST_CAMERA_CONFIG = (
+#     os.getenv("CAM_IP") or "192.168.1.8",
+#     os.getenv("CAM_PORT") or "8554",
+#     os.getenv("CAM_ID") or "admin",
+#     os.getenv("CAM_PASS") or "admin",
+#     "test_camera",
+# )
 
 # To prevent using test camera uncomment below line
 TEST_CAMERA_CONFIG = None
 
-LOCAL_IP = "192.168.1.0"
+LOCAL_IP = os.getenv("LOCAL_IP") or "192.168.1.0"
 
 
 class Paths(Enum):
