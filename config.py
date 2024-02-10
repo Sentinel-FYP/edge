@@ -12,9 +12,9 @@ BASE_URL = f"{SERVER_URL}/api/"
 
 # Config for camera scanning
 CAM_PORTS = [8534, 8554, 554]
-SCAN_LIMIT = os.getenv("SCAN_LIMIT") or 10
+SCAN_LIMIT = int(os.getenv("SCAN_LIMIT")) or 10
 # Timeout for client to wait for camera to respond
-SCAN_TIMEOUT = os.getenv("SCAN_TIMEOUT") or 1
+SCAN_TIMEOUT = int(os.getenv("SCAN_TIMEOUT")) or 1
 
 # (ip, port, username, password, camera_name)
 # TEST_CAMERA_CONFIG = (
