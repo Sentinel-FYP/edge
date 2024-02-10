@@ -74,6 +74,12 @@ def register_camera_events(
         print(events.CAMERAS_DISCOVERED_GET)
         with open(Paths.CAMS_CACHE_FILE.value, "r") as f:
             discovered_cams = f.readlines()
+            discovered_cams = map(lambda x: x.strip(), discovered_cams)
+            discovered_cams = list(filter(lambda x: x != "", discovered_cams))
+            connected_cams_ips = [x.cameraIP for x in CONNECTED_CAMERAS]
+            discovered_cams = list(
+                filter(lambda x: x not in connected_cams_ips, discovered_cams)
+            )
             await sio.emit(
                 events.CAMERAS_DISCOVERED,
                 {"cameras": discovered_cams, "deviceID": config.DEVICE_ID},
