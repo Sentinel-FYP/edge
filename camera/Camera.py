@@ -4,6 +4,10 @@ import time
 import json
 from enum import Enum
 import socket
+import base64
+import events
+import config
+from sio_client import SioClient
 
 
 class TextColors(Enum):
@@ -103,6 +107,19 @@ class Camera:
 
     def get_fps(self):
         return self.cap.get(cv2.CAP_PROP_FPS)
+
+    async def update_thumbnail(self, frame, sio_client: SioClient):
+        # Convert frame to base64
+        _, buffer = cv2.imencode(".jpg", frame)
+        base64_string = base64.b64encode(buffer).decode("utf-8")
+        await sio_client.emit(
+            events.CAMERAS_UPDATE,
+            {
+                "deviceID": config.DEVICE_ID,
+                "cameraName": self.name,
+                "thumbnail": base64_string,
+            },
+        )
 
     def __str__(self):
         return f"Camera {self.name} at {self.url}"

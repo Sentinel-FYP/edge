@@ -37,7 +37,7 @@ def register_camera_events(
                 cameraIP=data["cameraIP"],
                 username=data["username"],
                 password=data["password"],
-                name="New Camera",
+                name=data["cameraName"],
             )
             print(f"Connecting to new Camera {new_camera}")
             new_camera.connect()

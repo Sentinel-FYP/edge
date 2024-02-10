@@ -17,6 +17,7 @@ from sio_client import SioClient
 import traceback
 
 ANOMALY_THRESHOLD = 0.9
+THUMBNAIL_UPDATE_FREQUENCY = 1000
 
 
 class AnomalyHandler:
@@ -126,7 +127,7 @@ class ModelThread(Thread):
         anomaly_handler = AnomalyHandler(
             self.api_client, self.sio_client, self.async_loop
         )
-        fc = 0
+        fc = -1
         try:
             while True:
                 if self.terminate_event.is_set():
@@ -148,6 +149,11 @@ class ModelThread(Thread):
                 if fc % 100 == 0:
                     self.logger.info(
                         f"prediction : {model.prediction} | probability : {model.probability}"
+                    )
+                if fc % THUMBNAIL_UPDATE_FREQUENCY == 0:
+                    asyncio.ensure_future(
+                        self.camera.update_thumbnail(frame, self.sio_client),
+                        loop=self.async_loop,
                     )
                 if (
                     model.prediction == AnomalyType.ANOMALY
