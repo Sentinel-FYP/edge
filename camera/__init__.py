@@ -10,9 +10,10 @@ import traceback
 import config
 from config import Paths
 import events
+from typing import List
 
-CAMERAS: list[Camera] = []
-CONNECTED_CAMERAS: list[Camera] = []
+CAMERAS: List[Camera] = []
+CONNECTED_CAMERAS: List[Camera] = []
 
 
 # TEST CAMERA CONFIG IN config.py file
@@ -175,7 +176,7 @@ async def scan_cameras(limit, sio: SioClient):
     cache_to_file(cams)
 
 
-def cache_to_file(cams: list):
+def cache_to_file(cams: List):
     clear_cache()
     with open(Paths.CAMS_CACHE_FILE.value, "w") as f:
         for cam in cams:

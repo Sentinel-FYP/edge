@@ -3,12 +3,13 @@ from asyncio import AbstractEventLoop
 from api import APIClient
 from sio_client import SioClient
 from camera import Camera
+from typing import List
 
 MODEL_THREADS = {}
 
 
 def process_cameras(
-    cameras: list[Camera],
+    cameras: List[Camera],
     sio: SioClient,
     async_loop: AbstractEventLoop,
     api_client: APIClient,
