@@ -2,6 +2,7 @@ import cv2
 from PIL import Image
 import uuid
 import psutil
+from config import Paths
 
 
 def generate_video_thumbnail(video_file: str):
@@ -11,7 +12,7 @@ def generate_video_thumbnail(video_file: str):
     if ret and frame is not None:
         image = Image.fromarray(frame)
         image.resize((172, 172))
-        filename = "temp/{}.jpg".format(uuid.uuid4())
+        filename = Paths.TEMP_DIR.value / "{}.jpg".format(uuid.uuid4())
         image.save(filename)
         return filename
     return None

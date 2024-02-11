@@ -57,7 +57,7 @@ class AnomalyHandler:
             )
             self.anomaly_started = True
             self.occurredAt = datetime.now().isoformat()
-            self.clipFileName = f"videos/{uuid.uuid4()}.mp4"
+            self.clipFileName = Paths.CLIPS_DIR.value / f"{uuid.uuid4()}.mp4"
             self.video_writer = cv2.VideoWriter(
                 self.clipFileName,
                 cv2.VideoWriter_fourcc(*"mp4v"),
@@ -102,7 +102,6 @@ class ModelThread(Thread):
         self.terminate_event = Event()
         self.logger = logging.getLogger(__name__)
         self.api_client = api_client
-        # self.tasks_queue = tasks_queue
         self.async_loop = async_loop
         self.sio_client = sio_client
 
