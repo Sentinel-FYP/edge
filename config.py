@@ -5,6 +5,16 @@ import os
 
 load_dotenv(override=True)
 
+
+# S3_BUCKET = os.getenv("S3_BUCKET")
+# S3_KEY = os.getenv("S3_KEY")
+# S3_SECRET = os.getenv("S3_SECRET")
+
+# assert S3_BUCKET, "S3_BUCKET not found in environment"
+# assert S3_KEY, "S3_KEY not found in environment"
+# assert S3_SECRET, "S3_SECRET not found in environment"
+
+
 DEVICE_ID = os.getenv("DEVICE_ID") or "abc"
 # SERVER_URL = "http://localhost:5000"
 SERVER_URL = os.getenv("SERVER_URL") or "http://13.51.86.179:5500"

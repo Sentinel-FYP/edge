@@ -70,7 +70,7 @@ class AnomalyHandler:
         return AnomalyLog(
             occurredAt=self.occurredAt,
             fromDevice=self.api_client.deviceMongoId,
-            clipFileName=self.clipFileName,
+            clipFileName=self.clipFileName.name,
             endedAt=self.endedAt,
         )
 
@@ -79,6 +79,9 @@ class AnomalyHandler:
             print("Anomaly Ended")
             self.anomaly_started = False
             self.endedAt = datetime.now().isoformat()
+            # asyncio.ensure_future(
+            #     utils.upload_to_s3(self.clipFileName), loop=self.async_loop
+            # )
             asyncio.ensure_future(
                 self.api_client.post_anomaly_log(self.create_anomaly_log()),
                 loop=self.async_loop,
@@ -126,9 +129,6 @@ class ModelThread(Thread):
             )
         self.logger.info("Loaded Model")
         start = timer()
-        # log_sent = False
-        # anomaly_log = None
-        # video_writer = None
         anomaly_handler = AnomalyHandler(
             self.api_client, self.sio_client, self.async_loop
         )
@@ -140,8 +140,6 @@ class ModelThread(Thread):
                     break
                 frame = self.camera.get_frame()
                 fc += 1
-                # if video_writer is not None:
-                #     video_writer.write(frame)
                 model.feed_frame(frame)
                 Camera.put_text_overlay(
                     frame,
@@ -171,66 +169,12 @@ class ModelThread(Thread):
                     anomaly_handler.anomaly_detected(frame, fps, self.camera.name)
                 if model.prediction == AnomalyType.NORMAL:
                     anomaly_handler.normal_detected()
-
-                # if model.prediction == AnomalyType.ANOMALY and log_sent == True:
-                #     log_sent = False
-                #     anomaly_log = None
-                # if (
-                #     model.prediction == AnomalyType.ANOMALY
-                #     and log_sent == False
-                #     and anomaly_log is None
-                # ):
-                #     print("Anomaly Detected")
-                #     clipFileName = f"videos/{uuid.uuid4()}.mp4"
-                #     video_writer = cv2.VideoWriter(
-                #         clipFileName,
-                #         cv2.VideoWriter_fourcc(*"mp4v"),
-                #         self.camera.get_fps(),
-                #         frame.shape[:2][::-1],
-                #     )
-                #     anomaly_log = AnomalyLog(
-                #         occurredAt=datetime.now().isoformat(),
-                #         fromDevice=self.api_client.deviceMongoId,
-                #         clipFileName=clipFileName,
-                #     )
-                # if (
-                #     model.prediction == AnomalyType.NORMAL
-                #     and log_sent == False
-                #     and anomaly_log is not None
-                # ):
-                #     video_writer.release()
-                #     video_writer = None
-                #     print("Normal detected. posting to server")
-                #     anomaly_log.endedAt = datetime.now().isoformat()
-                #     asyncio.ensure_future(
-                #         self.api_client.post_anomaly_log(anomaly_log),
-                #         loop=self.async_loop,
-                #     )
-
-                #     # log_task = self.async_loop.create_task(
-                #     #     self.api_client.post_anomaly_log(anomaly_log)
-                #     # )
-                #     # self.tasks_queue.put(log_task)
-                #     log_sent = True
         except CameraDisconnected:
             print("Camera Disconnected. Terminating thread")
         except Exception as e:
             print(e)
             traceback.print_exc()
         finally:
-            # if (
-            #     model.prediction == AnomalyType.ANOMALY
-            #     and log_sent == False
-            #     and anomaly_log is not None
-            # ):
-            #     video_writer.release()
-            #     video_writer = None
-            #     print("Loop Ended. Posting to server")
-            #     anomaly_log.endedAt = datetime.now().isoformat()
-            #     log_task = self.async_loop.create_task(
-            #         self.api_client.post_anomaly_log(anomaly_log)
-            #     )
-            #     self.tasks_queue.put(log_task)
             anomaly_handler.normal_detected()
             end = timer()
             self.logger.info(
