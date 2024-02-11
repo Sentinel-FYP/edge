@@ -3,4 +3,4 @@ class AnomalyLog:
         self.occurredAt = occurredAt
         self.fromDevice = fromDevice
         self.clipFileName = clipFileName
-        self.endedAt = self.endedAt
+        self.endedAt = endedAt

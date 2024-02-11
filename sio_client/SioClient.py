@@ -33,8 +33,15 @@ class SioClient(AsyncClient):
     async def close(self):
         await self.disconnect()
 
-    async def send_alert(self, deviceID, localIP):
-        await self.emit(events.ALERT_SEND, {"deviceID": deviceID, "localIP": localIP})
+    async def send_alert(self, notificationTitle, notificationMessage):
+        await self.emit(
+            events.ALERT_SEND,
+            {
+                "deviceID": config.DEVICE_ID,
+                "notificationTitle": notificationTitle,
+                "notificationMessage": notificationMessage,
+            },
+        )
 
     async def send_error(self, message):
         await self.emit(events.ERROR, {"message": message})

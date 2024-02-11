@@ -16,7 +16,7 @@ from config import Paths
 from sio_client import SioClient
 import traceback
 
-ANOMALY_THRESHOLD = 0.9
+ANOMALY_THRESHOLD = 0.5
 THUMBNAIL_UPDATE_FREQUENCY = 1000
 
 
@@ -46,9 +46,15 @@ class AnomalyHandler:
     def handle_anomaly_frame(self, frame):
         self.video_writer.write(frame)
 
-    def anomaly_detected(self, frame, fps):
+    def anomaly_detected(self, frame, fps, camera_name):
         if not self.anomaly_started:
             print("Anomaly Started")
+            asyncio.ensure_future(
+                self.sio_client.send_alert(
+                    "Anomaly Detected", f"Anomaly Detected in the {camera_name}"
+                ),
+                loop=self.async_loop,
+            )
             self.anomaly_started = True
             self.occurredAt = datetime.now().isoformat()
             self.clipFileName = f"videos/{uuid.uuid4()}.mp4"
@@ -128,6 +134,7 @@ class ModelThread(Thread):
             self.api_client, self.sio_client, self.async_loop
         )
         fc = -1
+        fps = self.camera.get_fps()
         try:
             while True:
                 if self.terminate_event.is_set():
@@ -150,7 +157,10 @@ class ModelThread(Thread):
                     self.logger.info(
                         f"prediction : {model.prediction} | probability : {model.probability}"
                     )
-                if fc % THUMBNAIL_UPDATE_FREQUENCY == 0:
+                if (
+                    fc % THUMBNAIL_UPDATE_FREQUENCY == 0
+                    and self.camera.name != "test_camera"
+                ):
                     asyncio.ensure_future(
                         self.camera.update_thumbnail(frame, self.sio_client),
                         loop=self.async_loop,
@@ -159,8 +169,7 @@ class ModelThread(Thread):
                     model.prediction == AnomalyType.ANOMALY
                     and model.probability > ANOMALY_THRESHOLD
                 ):
-                    fps = self.camera.get_fps()
-                    anomaly_handler.anomaly_detected(frame, fps)
+                    anomaly_handler.anomaly_detected(frame, fps, self.camera.name)
                 if model.prediction == AnomalyType.NORMAL:
                     anomaly_handler.normal_detected()
 
