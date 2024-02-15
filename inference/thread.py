@@ -139,7 +139,7 @@ class ModelThread(Thread):
             while True:
                 if self.terminate_event.is_set():
                     break
-                self.should_pause.wait()
+                # self.should_pause.wait()
                 frame = self.camera.get_frame()
                 fc += 1
                 model.feed_frame(frame)
@@ -153,9 +153,10 @@ class ModelThread(Thread):
                     ),
                 )
                 if fc % 100 == 0:
-                    self.logger.info(
-                        f"prediction : {model.prediction} | probability : {model.probability}"
-                    )
+                    self.logger.info(f"prediction : {model.prediction}")
+                    self.logger.info(f"probability : {model.probability*100:.2f}%")
+                    self.logger.info(f"fps : {fc/(timer()-start):.2f}")
+
                 if (
                     fc % THUMBNAIL_UPDATE_FREQUENCY == 0
                     and self.camera.name != "test_camera"

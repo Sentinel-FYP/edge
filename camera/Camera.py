@@ -49,14 +49,16 @@ class Camera:
     def is_online(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(1)
+        result = True
         try:
             ip, port = self.cameraIP.split(":")
             port = int(port)
             s.connect((ip, port))
-            s.close()
-            return True
         except socket.error:
-            return False
+            result = False
+        finally:
+            s.close()
+        return result
 
     def connect(self):
         if not self.is_online():
