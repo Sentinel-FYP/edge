@@ -94,7 +94,6 @@ class ModelThread(Thread):
     def __init__(
         self,
         camera: Camera,
-        # tasks_queue: Queue,
         async_loop: asyncio.AbstractEventLoop,
         api_client: APIClient,
         sio_client: SioClient,

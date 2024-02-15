@@ -40,8 +40,12 @@ class Camera:
         return self.name == o.name
 
     @classmethod
-    def from_credentials(cls, cameraIP: str, username: str, password: str, name):
+    def from_credentials(
+        cls, cameraIP: str, username: str, password: str, name, channel=None
+    ):
         url = f"rtsp://{username.strip()}:{password.strip()}@{cameraIP}/"
+        if channel:
+            url += channel
         return cls(
             url, name=name, cameraIP=cameraIP, username=username, password=password
         )

@@ -15,6 +15,25 @@ from typing import List
 CAMERAS: List[Camera] = []
 CONNECTED_CAMERAS: List[Camera] = []
 
+# For testing multiple cameras
+CAMERAS.append(
+    Camera.from_credentials("192.168.100.9:8554", "admin", "admin", "test_camera_1")
+)
+CAMERAS.append(
+    Camera.from_credentials("192.168.100.9:8554", "admin", "admin", "test_camera_2")
+)
+CAMERAS.append(
+    Camera.from_credentials("192.168.100.9:8554", "admin", "admin", "test_camera_3")
+)
+CAMERAS.append(
+    Camera.from_credentials("192.168.100.9:8554", "admin", "admin", "test_camera_4")
+)
+CAMERAS.append(
+    Camera.from_credentials("192.168.100.9:8554", "admin", "admin", "test_camera_5")
+)
+CAMERAS.append(
+    Camera.from_credentials("192.168.100.9:8554", "admin", "admin", "test_camera_6")
+)
 
 # TEST CAMERA CONFIG IN config.py file
 if config.TEST_CAMERA_CONFIG:
