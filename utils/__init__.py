@@ -13,6 +13,7 @@ def generate_video_thumbnail(video_file: str):
     ret, frame = cap.read()
     cap.release()
     if ret and frame is not None:
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         image = Image.fromarray(frame)
         image.resize((172, 172))
         filename = Paths.TEMP_DIR.value / "{}.jpg".format(uuid.uuid4())

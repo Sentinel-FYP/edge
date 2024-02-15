@@ -3,9 +3,9 @@ from asyncio import AbstractEventLoop
 from api import APIClient
 from sio_client import SioClient
 from camera import Camera
-from typing import List
+from typing import List, Dict
 
-MODEL_THREADS = {}
+MODEL_THREADS: Dict[Camera, ModelThread] = {}
 
 
 def process_cameras(
@@ -32,6 +32,16 @@ def create_model_thread(
 
 
 def kill_threads():
-    for camera, thread in MODEL_THREADS.items():
+    for thread in MODEL_THREADS.values():
         thread.terminate()
     MODEL_THREADS.clear()
+
+
+def pause_threads():
+    for thread in MODEL_THREADS.values():
+        thread.pause()
+
+
+def unpause_threads():
+    for thread in MODEL_THREADS.values():
+        thread.unpause()

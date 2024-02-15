@@ -107,6 +107,7 @@ class ModelThread(Thread):
         self.api_client = api_client
         self.async_loop = async_loop
         self.sio_client = sio_client
+        self.should_pause = Event()
 
     def run(self):
         try:
@@ -138,6 +139,7 @@ class ModelThread(Thread):
             while True:
                 if self.terminate_event.is_set():
                     break
+                self.should_pause.wait()
                 frame = self.camera.get_frame()
                 fc += 1
                 model.feed_frame(frame)
@@ -186,3 +188,9 @@ class ModelThread(Thread):
 
     def terminate(self):
         self.terminate_event.set()
+
+    def pause(self):
+        self.should_pause.set()
+
+    def unpause(self):
+        self.should_pause.clear()
