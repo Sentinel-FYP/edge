@@ -13,6 +13,7 @@ import utils
 import tensorflow as tf
 from camera import Camera, CameraDisconnected, TextColors
 from config import Paths
+import config
 from sio_client import SioClient
 import traceback
 
@@ -99,7 +100,17 @@ class ModelThread(Thread):
         sio_client: SioClient,
     ):
         Thread.__init__(self)
-        logging.basicConfig(format="%(threadName)s | %(message)s", level=logging.INFO)
+        log_file = (
+            None
+            if config.LOGS_FILE is None
+            else str(Paths.LOGS_DIR.value / config.LOGS_FILE)
+        )
+        logging.basicConfig(
+            format="%(threadName)s | %(message)s",
+            level=logging.INFO,
+            filename=log_file,
+            filemode="w",
+        )
         self.camera = camera
         self.terminate_event = Event()
         self.logger = logging.getLogger(__name__)

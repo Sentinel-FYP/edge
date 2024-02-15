@@ -16,33 +16,15 @@ CAMERAS: List[Camera] = []
 CONNECTED_CAMERAS: List[Camera] = []
 
 # For testing multiple cameras
-CAMERAS.append(
-    Camera.from_credentials("192.168.100.9:8554", "admin", "admin", "test_camera_1")
-)
-CAMERAS.append(
-    Camera.from_credentials("192.168.100.9:8554", "admin", "admin", "test_camera_2")
-)
-CAMERAS.append(
-    Camera.from_credentials("192.168.100.9:8554", "admin", "admin", "test_camera_3")
-)
-CAMERAS.append(
-    Camera.from_credentials("192.168.100.9:8554", "admin", "admin", "test_camera_4")
-)
-CAMERAS.append(
-    Camera.from_credentials("192.168.100.9:8554", "admin", "admin", "test_camera_5")
-)
-CAMERAS.append(
-    Camera.from_credentials("192.168.100.9:8554", "admin", "admin", "test_camera_6")
-)
+
 
 # TEST CAMERA CONFIG IN config.py file
 if config.TEST_CAMERA_CONFIG:
-    test_camera = Camera.from_credentials(*config.TEST_CAMERA_CONFIG)
-else:
-    test_camera = None
-
-if test_camera:
-    CAMERAS.append(test_camera)
+    for i in range(config.TEST_CAM_COUNT):
+        test_camera = Camera.from_credentials(
+            *config.TEST_CAMERA_CONFIG, f"test_camera_{i + 1}"
+        )
+        CAMERAS.append(test_camera)
 
 
 def register_camera_events(
