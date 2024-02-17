@@ -35,7 +35,11 @@ class VideoStreamer:
         self.pc: RTCPeerConnection = None
 
     def create_local_tracks(self, decode=True):
-        player = MediaPlayer(self.media_path, decode=decode)
+        player = MediaPlayer(
+            self.media_path,
+            decode=decode,
+            options={"framerate": config.STREAM_FPS, "video_size": config.STREAM_RES},
+        )
         return player.audio, player.video
 
     async def handle_offer(self, data):
