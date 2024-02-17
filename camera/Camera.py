@@ -32,6 +32,8 @@ class Camera:
         self.cameraIP = cameraIP
         self.username = username
         self.password = password
+        self.fc = 0
+        self.skip_rate = config.FRAME_SKIP_RATE
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -82,6 +84,9 @@ class Camera:
         self.connect()
 
     def get_frame(self, show=False):
+        for _ in range(self.skip_rate - 1):
+            self.cap.grab()
+            self.fc += 1
         ret, frame = self.cap.read()
         if not ret or frame is None:
             if self.should_reconnect:
@@ -95,6 +100,7 @@ class Camera:
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 self.disconnect()
                 raise CameraDisconnected("Camera disconnected")
+        self.fc += 1
         return frame
 
     def display(self):

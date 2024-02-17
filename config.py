@@ -20,6 +20,7 @@ DEVICE_ID = os.getenv("DEVICE_ID") or "abc"
 SERVER_URL = os.getenv("SERVER_URL") or "http://13.51.86.179:5500"
 BASE_URL = f"{SERVER_URL}/api/"
 
+FRAME_SKIP_RATE = int(os.getenv("FRAME_SKIP_RATE") or 1)
 # Config for camera scanning
 CAM_PORTS = [8554, 554]
 SCAN_LIMIT = int(os.getenv("SCAN_LIMIT") or 10)

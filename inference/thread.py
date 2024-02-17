@@ -18,7 +18,7 @@ from sio_client import SioClient
 import traceback
 
 ANOMALY_THRESHOLD = 0.5
-THUMBNAIL_UPDATE_FREQUENCY = 1000
+THUMBNAIL_UPDATE_FREQUENCY = 90000
 
 
 class AnomalyHandler:
@@ -105,11 +105,13 @@ class ModelThread(Thread):
             if config.LOGS_FILE is None
             else str(Paths.LOGS_DIR.value / config.LOGS_FILE)
         )
+        handlers = [logging.StreamHandler()]
+        if log_file:
+            handlers.append(logging.FileHandler(log_file, mode="w"))
         logging.basicConfig(
             format="%(threadName)s | %(message)s",
             level=logging.INFO,
-            filename=log_file,
-            filemode="w",
+            handlers=handlers,
         )
         self.camera = camera
         self.terminate_event = Event()
@@ -143,7 +145,6 @@ class ModelThread(Thread):
         anomaly_handler = AnomalyHandler(
             self.api_client, self.sio_client, self.async_loop
         )
-        fc = -1
         fps = self.camera.get_fps()
         try:
             while True:
@@ -151,7 +152,7 @@ class ModelThread(Thread):
                     break
                 # self.should_pause.wait()
                 frame = self.camera.get_frame()
-                fc += 1
+                fc = self.camera.fc
                 model.feed_frame(frame)
                 Camera.put_text_overlay(
                     frame,
@@ -167,14 +168,13 @@ class ModelThread(Thread):
                     self.logger.info(f"probability : {model.probability*100:.2f}%")
                     self.logger.info(f"fps : {fc/(timer()-start):.2f}")
 
-                if (
-                    fc % THUMBNAIL_UPDATE_FREQUENCY == 0
-                    and self.camera.name != "test_camera"
-                ):
-                    asyncio.ensure_future(
-                        self.camera.update_thumbnail(frame, self.sio_client),
-                        loop=self.async_loop,
-                    )
+                # if fc % THUMBNAIL_UPDATE_FREQUENCY == 0 and not (
+                #     "test_camera" in self.camera.name
+                # ):
+                #     asyncio.ensure_future(
+                #         self.camera.update_thumbnail(frame, self.sio_client),
+                #         loop=self.async_loop,
+                #     )
                 if (
                     model.prediction == AnomalyType.ANOMALY
                     and model.probability > ANOMALY_THRESHOLD
