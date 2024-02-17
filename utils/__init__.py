@@ -4,7 +4,8 @@ import uuid
 import psutil
 from config import Paths
 import pathlib
-import boto3
+
+# import boto3
 import config
 
 
@@ -27,11 +28,12 @@ def get_system_ram():
 
 
 async def upload_to_s3(file_path: pathlib.Path):
-    s3_client = boto3.client(
-        "s3",
-        aws_access_key_id=config.S3_KEY,
-        aws_secret_access_key=config.S3_SECRET,
-    )
-    with open(file_path, "rb") as file:
-        s3_client.upload_fileobj(file, config.S3_BUCKET, file_path.name)
-    s3_client.close()
+    # s3_client = boto3.client(
+    #     "s3",
+    #     aws_access_key_id=config.S3_KEY,
+    #     aws_secret_access_key=config.S3_SECRET,
+    # )
+    # with open(file_path, "rb") as file:
+    #     s3_client.upload_fileobj(file, config.S3_BUCKET, file_path.name)
+    # s3_client.close()
+    pass
