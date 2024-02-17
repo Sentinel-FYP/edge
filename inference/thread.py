@@ -168,13 +168,13 @@ class ModelThread(Thread):
                     self.logger.info(f"probability : {model.probability*100:.2f}%")
                     self.logger.info(f"fps : {fc/(timer()-start):.2f}")
 
-                # if fc % THUMBNAIL_UPDATE_FREQUENCY == 0 and not (
-                #     "test_camera" in self.camera.name
-                # ):
-                #     asyncio.ensure_future(
-                #         self.camera.update_thumbnail(frame, self.sio_client),
-                #         loop=self.async_loop,
-                #     )
+                if fc % THUMBNAIL_UPDATE_FREQUENCY == 0 and not (
+                    "test_camera" in self.camera.name
+                ):
+                    asyncio.ensure_future(
+                        self.camera.update_thumbnail(frame, self.sio_client),
+                        loop=self.async_loop,
+                    )
                 if (
                     model.prediction == AnomalyType.ANOMALY
                     and model.probability > ANOMALY_THRESHOLD
