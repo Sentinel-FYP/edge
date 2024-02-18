@@ -5,8 +5,6 @@ import logging
 from timeit import default_timer as timer
 from api.models import AnomalyLog
 from datetime import datetime
-import cv2
-import uuid
 from api import APIClient
 import asyncio
 import utils
@@ -17,7 +15,7 @@ import config
 from sio_client import SioClient
 import traceback
 
-ANOMALY_THRESHOLD = 0.5
+ANOMALY_THRESHOLD = 0.7
 THUMBNAIL_UPDATE_FREQUENCY = 90000
 
 
@@ -27,68 +25,40 @@ class AnomalyHandler:
         api_client: APIClient,
         sio_client: SioClient,
         async_loop: asyncio.AbstractEventLoop,
+        camera: Camera,
     ):
         self.api_client = api_client
         self.sio_client = sio_client
         self.async_loop = async_loop
+        self.camera = camera
         self.anomaly_started = False
-        self.occurredAt = None
-        self.endedAt = None
-        self.clipFileName = None
-        self.video_writer = None
+        self.anomaly_log: AnomalyLog = AnomalyLog()
 
-    def reset(self):
-        self.anomaly_started = False
-        self.occurredAt = None
-        self.endedAt = None
-        self.clipFileName = None
-        self.video_writer = None
-
-    def handle_anomaly_frame(self, frame):
-        self.video_writer.write(frame)
-
-    def anomaly_detected(self, frame, fps, camera_name):
+    def anomaly_detected(self, frame):
         if not self.anomaly_started:
             print("Anomaly Started")
             asyncio.ensure_future(
                 self.sio_client.send_alert(
-                    "Anomaly Detected", f"Anomaly Detected in the {camera_name}"
+                    "Anomaly Detected", f"Anomaly Detected in the {self.camera.name}"
                 ),
                 loop=self.async_loop,
             )
             self.anomaly_started = True
-            self.occurredAt = datetime.now().isoformat()
-            self.clipFileName = Paths.CLIPS_DIR.value / f"{uuid.uuid4()}.mp4"
-            self.video_writer = cv2.VideoWriter(
-                self.clipFileName,
-                cv2.VideoWriter_fourcc(*"mp4v"),
-                fps,
-                frame.shape[:2][::-1],
-            )
-        self.handle_anomaly_frame(frame)
-
-    def create_anomaly_log(self):
-        return AnomalyLog(
-            occurredAt=self.occurredAt,
-            fromDevice=self.api_client.deviceMongoId,
-            clipFileName=self.clipFileName.name,
-            endedAt=self.endedAt,
-        )
+            self.anomaly_log.occurredAt = datetime.now().isoformat()
+            self.anomaly_log.clipFileName = self.camera.start_recording(frame)
+            self.anomaly_log.fromDevice = self.api_client.deviceMongoId
 
     def normal_detected(self):
         if self.anomaly_started:
             print("Anomaly Ended")
             self.anomaly_started = False
             self.endedAt = datetime.now().isoformat()
-            # asyncio.ensure_future(
-            #     utils.upload_to_s3(self.clipFileName), loop=self.async_loop
-            # )
+            self.camera.stop_recording()
             asyncio.ensure_future(
-                self.api_client.post_anomaly_log(self.create_anomaly_log()),
+                self.api_client.post_anomaly_log(self.anomaly_log.clone()),
                 loop=self.async_loop,
             )
-            self.video_writer.release()
-            self.reset()
+            self.anomaly_log.reset()
 
 
 class ModelThread(Thread):
@@ -119,7 +89,6 @@ class ModelThread(Thread):
         self.api_client = api_client
         self.async_loop = async_loop
         self.sio_client = sio_client
-        self.should_pause = Event()
 
     def run(self):
         try:
@@ -143,26 +112,24 @@ class ModelThread(Thread):
         self.logger.info("Loaded Model")
         start = timer()
         anomaly_handler = AnomalyHandler(
-            self.api_client, self.sio_client, self.async_loop
+            self.api_client, self.sio_client, self.async_loop, self.camera
         )
-        fps = self.camera.get_fps()
         try:
             while True:
                 if self.terminate_event.is_set():
                     break
-                # self.should_pause.wait()
                 frame = self.camera.get_frame()
                 fc = self.camera.fc
                 model.feed_frame(frame)
-                Camera.put_text_overlay(
-                    frame,
-                    text=f"{model.prediction}: {model.probability*100:.2f}%",
-                    color=(
-                        TextColors.GREEN
-                        if model.prediction == AnomalyType.NORMAL
-                        else TextColors.RED
-                    ),
-                )
+                # Camera.put_text_overlay(
+                #     frame,
+                #     text=f"{model.prediction}: {model.probability*100:.2f}%",
+                #     color=(
+                #         TextColors.GREEN
+                #         if model.prediction == AnomalyType.NORMAL
+                #         else TextColors.RED
+                #     ),
+                # )
                 if fc % 100 == 0:
                     self.logger.info(f"prediction : {model.prediction}")
                     self.logger.info(f"probability : {model.probability*100:.2f}%")
@@ -179,7 +146,7 @@ class ModelThread(Thread):
                     model.prediction == AnomalyType.ANOMALY
                     and model.probability > ANOMALY_THRESHOLD
                 ):
-                    anomaly_handler.anomaly_detected(frame, fps, self.camera.name)
+                    anomaly_handler.anomaly_detected(frame)
                 if model.prediction == AnomalyType.NORMAL:
                     anomaly_handler.normal_detected()
         except CameraDisconnected:
@@ -199,9 +166,3 @@ class ModelThread(Thread):
 
     def terminate(self):
         self.terminate_event.set()
-
-    def pause(self):
-        self.should_pause.set()
-
-    def unpause(self):
-        self.should_pause.clear()

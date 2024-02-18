@@ -8,6 +8,7 @@ import base64
 import events
 import config
 from sio_client import SioClient
+import uuid
 
 
 class TextColors(Enum):
@@ -34,6 +35,8 @@ class Camera:
         self.password = password
         self.fc = 0
         self.skip_rate = config.FRAME_SKIP_RATE
+        self.clipFileName = None
+        self.video_writer: cv2.VideoWriter = None
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -84,23 +87,31 @@ class Camera:
         self.connect()
 
     def get_frame(self, show=False):
-        for _ in range(self.skip_rate - 1):
-            self.cap.grab()
-            self.fc += 1
+        if self.clipFileName is None:
+            for _ in range(self.skip_rate - 1):
+                ret = self.cap.grab()
+                self.fc += 1
+                if not ret:
+                    raise CameraDisconnected("Camera disconnected")
+        else:
+            for _ in range(self.skip_rate - 1):
+                ret, frame = self.cap.read()
+                self.fc += 1
+                if not ret or frame is None:
+                    raise CameraDisconnected("Camera disconnected")
+                else:
+                    self.video_writer.write(frame)
         ret, frame = self.cap.read()
         if not ret or frame is None:
-            if self.should_reconnect:
-                print("Reconnecting...")
-                self.reconnect()
-                return
-            else:
-                raise CameraDisconnected("Camera disconnected")
-        if show:
-            cv2.imshow("frame", frame)
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                self.disconnect()
-                raise CameraDisconnected("Camera disconnected")
+            raise CameraDisconnected("Camera disconnected")
+        # if show:
+        #     cv2.imshow("frame", frame)
+        #     if cv2.waitKey(1) & 0xFF == ord("q"):
+        #         self.disconnect()
+        #         raise CameraDisconnected("Camera disconnected")
         self.fc += 1
+        if self.clipFileName is not None:
+            self.video_writer.write(frame)
         return frame
 
     def display(self):
@@ -110,6 +121,23 @@ class Camera:
             except CameraDisconnected:
                 print("Stream ended")
                 break
+
+    def start_recording(self, frame):
+        print("Starting recording")
+        self.clipFileName = config.Paths.CLIPS_DIR.value / f"{uuid.uuid4()}.mp4"
+        self.video_writer = cv2.VideoWriter(
+            str(self.clipFileName),
+            cv2.VideoWriter_fourcc(*"mp4v"),
+            self.get_fps(),
+            frame.shape[:2][::-1],
+            isColor=True,
+        )
+        return str(self.clipFileName)
+
+    def stop_recording(self):
+        print("Stopping recording")
+        self.video_writer.release()
+        self.clipFileName = None
 
     @staticmethod
     def put_text_overlay(frame, text, color: TextColors = TextColors.RED):
