@@ -40,8 +40,8 @@ async def main():
     api_client = await APIClient.create()
     token = api_client.auth_token
     sio = await SioClient.create(token=token)
-    camera.fetch_registered_cameras(api_client)
-    camera.connect_to_cameras()
+    await camera.fetch_registered_cameras(api_client)
+    await camera.connect_to_cameras(sio)
     print("Total Connected Cameras", len(camera.CONNECTED_CAMERAS))
     # Events for adding camera
     camera.register_camera_events(sio, asyncio.get_event_loop(), api_client)

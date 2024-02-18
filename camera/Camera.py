@@ -158,6 +158,17 @@ class Camera:
                 "deviceID": config.DEVICE_ID,
                 "cameraName": self.name,
                 "thumbnail": base64_string,
+                "active": True,
+            },
+        )
+
+    async def update_active_status(self, sio_client: SioClient, active: bool):
+        await sio_client.emit(
+            events.CAMERAS_UPDATE,
+            {
+                "deviceID": config.DEVICE_ID,
+                "cameraName": self.name,
+                "active": active,
             },
         )
 

@@ -87,7 +87,7 @@ def register_camera_events(
             )
 
 
-def fetch_registered_cameras(api_client: APIClient):
+async def fetch_registered_cameras(api_client: APIClient):
     try:
         print("Fetching registered cameras from database...")
         camerasCredentials = api_client.device["cameras"]
@@ -99,15 +99,12 @@ def fetch_registered_cameras(api_client: APIClient):
                 password=cred["password"],
                 name=cred["cameraName"],
             )
-            if cred["active"]:
-                CAMERAS.append(camera)
-            else:
-                print(f"{camera} is disabled at database. Skipping...")
+            CAMERAS.append(camera)
     except KeyError:
         print(f"{cred} is not a valid camera credentials. Skipping...")
 
 
-def connect_to_cameras():
+async def connect_to_cameras(sio_client: SioClient):
     print("Connecting to cameras fetched from database....")
     for camera in CAMERAS:
         try:
@@ -118,6 +115,7 @@ def connect_to_cameras():
         except Exception as e:
             print(f"Failed to connect to {camera}")
             print(e)
+            await camera.update_active_status(sio_client, False)
             continue
 
 
