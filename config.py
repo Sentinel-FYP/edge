@@ -21,7 +21,7 @@ DEVICE_ID = os.getenv("DEVICE_ID") or "abc"
 SERVER_URL = os.getenv("SERVER_URL") or "http://13.51.86.179:5500"
 BASE_URL = f"{SERVER_URL}/api/"
 
-ANOMALY_THRESHOLD = int(os.getenv("ANOMALY_THRESHOLD") or 0.9)
+ANOMALY_THRESHOLD = float(os.getenv("ANOMALY_THRESHOLD") or 0.9)
 THUMBNAIL_UPDATE_FREQUENCY = int(os.getenv("THUMBNAIL_UPDATE_FREQUENCY") or 90000)
 
 FRAME_SKIP_RATE = int(os.getenv("FRAME_SKIP_RATE") or 1)
