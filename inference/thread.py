@@ -15,9 +15,6 @@ import config
 from sio_client import SioClient
 import traceback
 
-ANOMALY_THRESHOLD = 0.7
-THUMBNAIL_UPDATE_FREQUENCY = 90000
-
 
 class AnomalyHandler:
     def __init__(
@@ -135,7 +132,7 @@ class ModelThread(Thread):
                     self.logger.info(f"probability : {model.probability*100:.2f}%")
                     self.logger.info(f"fps : {fc/(timer()-start):.2f}")
 
-                if (fc - 1) % THUMBNAIL_UPDATE_FREQUENCY == 0 and not (
+                if (fc - 1) % config.THUMBNAIL_UPDATE_FREQUENCY == 0 and not (
                     "test_camera" in self.camera.name
                 ):
                     print("Updating Thumbnail")
@@ -145,9 +142,14 @@ class ModelThread(Thread):
                     )
                 if (
                     model.prediction == AnomalyType.ANOMALY
-                    and model.probability > ANOMALY_THRESHOLD
+                    and model.probability > config.ANOMALY_THRESHOLD
                 ):
                     anomaly_handler.anomaly_detected(frame)
+                elif (
+                    model.prediction == AnomalyType.ANOMALY
+                    and model.probability <= config.ANOMALY_THRESHOLD
+                ):
+                    anomaly_handler.normal_detected()
                 if model.prediction == AnomalyType.NORMAL:
                     anomaly_handler.normal_detected()
         except CameraDisconnected:
