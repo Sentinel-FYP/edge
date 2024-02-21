@@ -79,7 +79,8 @@ class Camera:
 
     def disconnect(self):
         cv2.destroyAllWindows()
-        self.cap.release()
+        if self.cap:
+            self.cap.release()
 
     def reconnect(self):
         self.disconnect()
