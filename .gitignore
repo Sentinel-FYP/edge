@@ -6,6 +6,7 @@ __pycache__
 jetson_logs
 temp
 videos
-saved_models
+saved_models/*
 clips
 .env
+!README.md
