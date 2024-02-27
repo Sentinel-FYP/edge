@@ -8,7 +8,7 @@ Download Model from this link
 # Important Note
 
 <ol>
-  <li>**-Lite model file should be named model.tflite**</li>
-  <li>**-GPU model folder should be named model_gpu**</li>
-  <li>**-Both should be place in the saved_models directory**</li>
+  <li>Lite model file should be named model.tflite</li>
+  <li>GPU model folder should be named model_gpu</li>
+  <li>Both should be place in the saved_models directory</li>
 </ol>
