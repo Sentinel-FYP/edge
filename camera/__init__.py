@@ -22,7 +22,7 @@ CONNECTED_CAMERAS: List[Camera] = []
 if config.TEST_CAMERA_CONFIG:
     for i in range(config.TEST_CAM_COUNT):
         test_camera = Camera.from_credentials(
-            *config.TEST_CAMERA_CONFIG, f"test_camera_{i + 1}"
+            *config.TEST_CAMERA_CONFIG, f"test_camera_{i + 1}", id="test_camera_id"
         )
         CAMERAS.append(test_camera)
 
@@ -98,6 +98,7 @@ async def fetch_registered_cameras(api_client: APIClient):
                 username=cred["username"],
                 password=cred["password"],
                 name=cred["cameraName"],
+                id=cred["_id"],
             )
             CAMERAS.append(camera)
     except KeyError:

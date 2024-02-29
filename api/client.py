@@ -43,6 +43,7 @@ class APIClient:
         print("posting anomaly...")
         data = dict(anomaly_log.__dict__)
         del data["clipFileName"]
+        print(data)
         thumbnail = utils.generate_video_thumbnail(anomaly_log.clipFileName)
         response = await self.client.post(
             "anomalyLogs",
@@ -53,6 +54,7 @@ class APIClient:
             },
         )
         print("anomaly posted")
+        print(response.json())
         return response.json()
 
     async def close(self):

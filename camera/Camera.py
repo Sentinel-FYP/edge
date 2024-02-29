@@ -25,6 +25,7 @@ class Camera:
         cameraIP=None,
         username=None,
         password=None,
+        id=None,
     ) -> None:
         self.url = url
         self.should_reconnect = should_reconnect
@@ -37,6 +38,7 @@ class Camera:
         self.skip_rate = config.FRAME_SKIP_RATE
         self.clipFileName = None
         self.video_writer: cv2.VideoWriter = None
+        self.id = id
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -46,13 +48,18 @@ class Camera:
 
     @classmethod
     def from_credentials(
-        cls, cameraIP: str, username: str, password: str, name, channel=None
+        cls, cameraIP: str, username: str, password: str, name, id, channel=None
     ):
         url = f"rtsp://{username.strip()}:{password.strip()}@{cameraIP}/"
         if channel:
             url += channel
         return cls(
-            url, name=name, cameraIP=cameraIP, username=username, password=password
+            url,
+            name=name,
+            cameraIP=cameraIP,
+            username=username,
+            password=password,
+            id=id,
         )
 
     def is_online(self):
@@ -174,7 +181,7 @@ class Camera:
         )
 
     def __str__(self):
-        return f"Camera {self.name} at {self.url}"
+        return f"Camera#{self.id} {self.name} at {self.url}"
 
 
 class CameraDisconnected(Exception):

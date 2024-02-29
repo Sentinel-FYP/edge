@@ -44,12 +44,13 @@ class AnomalyHandler:
             self.anomaly_log.occurredAt = datetime.now().isoformat()
             self.anomaly_log.clipFileName = self.camera.start_recording(frame)
             self.anomaly_log.fromDevice = self.api_client.deviceMongoId
+            self.anomaly_log.fromCamera = self.camera.id
 
     def normal_detected(self):
         if self.anomaly_started:
             print("Anomaly Ended")
             self.anomaly_started = False
-            self.endedAt = datetime.now().isoformat()
+            self.anomaly_log.endedAt = datetime.now().isoformat()
             self.camera.stop_recording()
             asyncio.ensure_future(
                 self.api_client.post_anomaly_log(self.anomaly_log.clone()),
