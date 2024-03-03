@@ -112,6 +112,7 @@ class ModelThread(Thread):
         anomaly_handler = AnomalyHandler(
             self.api_client, self.sio_client, self.async_loop, self.camera
         )
+        loop_counter = 0
         try:
             while True:
                 if self.terminate_event.is_set():
@@ -133,7 +134,7 @@ class ModelThread(Thread):
                     self.logger.info(f"probability : {model.probability*100:.2f}%")
                     self.logger.info(f"fps : {fc/(timer()-start):.2f}")
 
-                if (fc - 1) % config.THUMBNAIL_UPDATE_FREQUENCY == 0 and not (
+                if (loop_counter) % config.THUMBNAIL_UPDATE_FREQUENCY == 0 and not (
                     "test_camera" in self.camera.name
                 ):
                     print("Updating Thumbnail")
@@ -153,6 +154,7 @@ class ModelThread(Thread):
                     anomaly_handler.normal_detected()
                 if model.prediction == AnomalyType.NORMAL:
                     anomaly_handler.normal_detected()
+                loop_counter += 1
         except CameraDisconnected:
             print("Camera Disconnected. Terminating thread")
         except Exception as e:

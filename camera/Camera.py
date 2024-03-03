@@ -48,7 +48,7 @@ class Camera:
 
     @classmethod
     def from_credentials(
-        cls, cameraIP: str, username: str, password: str, name, id, channel=None
+        cls, cameraIP: str, username: str, password: str, name, id=None, channel=None
     ):
         url = f"rtsp://{username.strip()}:{password.strip()}@{cameraIP}/"
         if channel:
