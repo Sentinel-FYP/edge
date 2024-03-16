@@ -20,7 +20,7 @@ class APIClient:
         # validate if token is valid
         response = await self.client.get(f"edgeDevices/{self.deviceID}")
         response = response.json()
-        if type(response) != list and response["message"] == "TOKEN_ERROR":
+        if "message" in response and response["message"] == "TOKEN_ERROR":
             print("TOKEN EXPIRED: GETTING NEW TOKEN")
             # obtain new token
             data = {"deviceID": config.DEVICE_ID}
@@ -35,9 +35,15 @@ class APIClient:
                 file.write(self.auth_token)
         else:
             print("TOKEN VALID: REUSING TOKEN")
-            self.deviceMongoId = response[0]["_id"]
-            self.device = response[0]
+            self.deviceMongoId = response["_id"]
+            self.device = response
+            self.device["cameras"] = await self.get_cameras()
         return self
+
+    async def get_cameras(self):
+        deviceID = self.device["deviceID"]
+        response = await self.client.get(f"cameras?deviceID={deviceID}")
+        return response.json()
 
     async def post_anomaly_log(self, anomaly_log: AnomalyLog):
         print("posting anomaly...")
