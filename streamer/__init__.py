@@ -1,6 +1,6 @@
 from .streamer import VideoStreamer
 from sio_client import SioClient
-from camera import get_connected_camera_by_name
+from camera import CONNECTED_CAMERAS
 import asyncio
 import events
 import os
@@ -20,9 +20,8 @@ def register_stream_events(sio: SioClient):
     @sio.on(events.WEBRTC_OFFER)
     async def offer(data):
         print(events.WEBRTC_OFFER)
-        cameraName = data["cameraName"]
-        print("fetching camera", cameraName)
-        camera = get_connected_camera_by_name(cameraName)
+        print("fetching camera id", data["cameraID"])
+        camera = CONNECTED_CAMERAS[data["cameraID"]]
         if not camera:
             print("Camera not found")
             return

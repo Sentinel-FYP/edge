@@ -41,10 +41,10 @@ class Camera:
         self.id = id
 
     def __hash__(self) -> int:
-        return hash(self.name)
+        return hash(self.id)
 
     def __eq__(self, o: object) -> bool:
-        return self.name == o.name
+        return self.id == o.id
 
     @classmethod
     def from_credentials(
@@ -88,6 +88,7 @@ class Camera:
         cv2.destroyAllWindows()
         if self.cap:
             self.cap.release()
+        self.cap = None
 
     def reconnect(self):
         self.disconnect()
@@ -95,6 +96,8 @@ class Camera:
         self.connect()
 
     def get_frame(self, show=False):
+        if self.cap is None:
+            raise CameraDisconnected("Camera disconnected")
         if self.clipFileName is None:
             for _ in range(self.skip_rate - 1):
                 ret = self.cap.grab()

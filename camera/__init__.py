@@ -1,6 +1,5 @@
 from .Camera import Camera, CameraDisconnected, TextColors
 import socket
-import socket
 import ipaddress
 from api import APIClient
 from sio_client import SioClient
@@ -10,21 +9,21 @@ import traceback
 import config
 from config import Paths
 import events
-from typing import List
+from typing import List, Dict
 
-CAMERAS: List[Camera] = []
-CONNECTED_CAMERAS: List[Camera] = []
-
+CAMERAS: Dict[str, Camera] = {}
+CONNECTED_CAMERAS: Dict[str, Camera] = {}
+TEMP_CAMERAS: Dict[str, Camera] = {}
 # For testing multiple cameras
 
 
 # TEST CAMERA CONFIG IN config.py file
 if config.TEST_CAMERA_CONFIG:
     for i in range(config.TEST_CAM_COUNT):
-        test_camera = Camera.from_credentials(
+        test_camera: Camera = Camera.from_credentials(
             *config.TEST_CAMERA_CONFIG, f"test_camera_{i + 1}", id="test_camera_id"
         )
-        CAMERAS.append(test_camera)
+        CAMERAS[test_camera.id] = test_camera
 
 
 def register_camera_events(
@@ -42,7 +41,6 @@ def register_camera_events(
             )
             print(f"Connecting to new Camera {new_camera}")
             new_camera.connect()
-            await new_camera.update_active_status(sio, True)
             print("Connected")
             await sio.emit(
                 events.CAMERAS_ADDED,
@@ -54,7 +52,7 @@ def register_camera_events(
                     "deviceID": config.DEVICE_ID,
                 },
             )
-            CONNECTED_CAMERAS.append(new_camera)
+            TEMP_CAMERAS[new_camera.name] = new_camera
         except Exception:
             print("connection failed")
             await sio.emit(
@@ -70,13 +68,23 @@ def register_camera_events(
     async def on_cameras_added(data):
         print(events.CAMERAS_ADDED)
         try:
-            camera = list(
-                filter(lambda x: x.name == data["cameraName"], CONNECTED_CAMERAS)
-            )[0]
+            camera = TEMP_CAMERAS[data["cameraName"]]
             camera.id = data["cameraID"]
             create_model_thread(camera, sio, api_client, async_loop)
+            CONNECTED_CAMERAS[camera.id] = camera
         except Exception:
             print("connection failed")
+            traceback.print_exc()
+
+    @sio.on(events.CAMERAS_DELETE)
+    async def on_cameras_delete(data):
+        print(events.CAMERAS_DELETE)
+        try:
+            cameraToDelete = CONNECTED_CAMERAS[data["cameraID"]]
+            cameraToDelete.disconnect()
+            await cameraToDelete.update_active_status(sio, False)
+        except Exception:
+            print("camera deletion failed")
             traceback.print_exc()
 
     @sio.on(events.CAMERAS_DISCOVER)
@@ -91,7 +99,7 @@ def register_camera_events(
             discovered_cams = f.readlines()
             discovered_cams = map(lambda x: x.strip(), discovered_cams)
             discovered_cams = list(filter(lambda x: x != "", discovered_cams))
-            connected_cams_ips = [x.cameraIP for x in CONNECTED_CAMERAS]
+            connected_cams_ips = [x.cameraIP for x in CONNECTED_CAMERAS.values()]
             discovered_cams = list(
                 filter(lambda x: x not in connected_cams_ips, discovered_cams)
             )
@@ -114,18 +122,18 @@ async def fetch_registered_cameras(api_client: APIClient):
                 name=cred["cameraName"],
                 id=cred["_id"],
             )
-            CAMERAS.append(camera)
+            CAMERAS[camera.id] = camera
     except KeyError:
         print(f"{cred} is not a valid camera credentials. Skipping...")
 
 
 async def connect_to_cameras(sio_client: SioClient):
     print("Connecting to cameras fetched from database....")
-    for camera in CAMERAS:
+    for camera in CAMERAS.values():
         try:
             print(f"Connecting to {camera}")
             camera.connect()
-            CONNECTED_CAMERAS.append(camera)
+            CONNECTED_CAMERAS[camera.id] = camera
             print("Connected")
         except Exception as e:
             print(f"Failed to connect to {camera}")
@@ -134,11 +142,11 @@ async def connect_to_cameras(sio_client: SioClient):
             continue
 
 
-def get_connected_camera_by_name(name: str):
-    for cam in CONNECTED_CAMERAS:
-        if cam.name == name:
-            return cam
-    return None
+# def get_connected_camera_by_name(name: str):
+#     for cam in CONNECTED_CAMERAS.values():
+#         if cam.name == name:
+#             return cam
+#     return None
 
 
 def get_network_ip():
@@ -200,5 +208,5 @@ def clear_cache():
 
 
 def release_all_cams():
-    for cam in CONNECTED_CAMERAS:
+    for cam in CONNECTED_CAMERAS.values():
         cam.disconnect()
