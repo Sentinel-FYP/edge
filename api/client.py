@@ -42,7 +42,7 @@ class APIClient:
 
     async def get_cameras(self):
         deviceID = self.device["deviceID"]
-        response = await self.client.get(f"cameras?deviceID={deviceID}")
+        response = await self.client.get(f"cameras?deviceID={deviceID}&offline=true")
         return response.json()
 
     async def post_anomaly_log(self, anomaly_log: AnomalyLog):
