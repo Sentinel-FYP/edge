@@ -68,7 +68,10 @@ def register_camera_events(
     async def on_cameras_added(data):
         print(events.CAMERAS_ADDED)
         try:
-            camera = TEMP_CAMERAS[data["cameraName"]]
+            camera = TEMP_CAMERAS.get(data["cameraName"])
+            if camera is None:
+                print("Camera with Name not found")
+                return
             camera.id = data["cameraID"]
             create_model_thread(camera, sio, api_client, async_loop)
             CONNECTED_CAMERAS[camera.id] = camera
@@ -80,12 +83,32 @@ def register_camera_events(
     async def on_cameras_delete(data):
         print(events.CAMERAS_DELETE)
         try:
-            cameraToDelete = CONNECTED_CAMERAS[data["cameraID"]]
+            cameraToDelete = CONNECTED_CAMERAS.get(data["cameraID"])
+            if cameraToDelete is None:
+                print("Camera with ID not found")
+                return
             cameraToDelete.disconnect()
             await cameraToDelete.update_active_status(sio, False)
         except Exception:
             print("camera deletion failed")
             traceback.print_exc()
+
+    @sio.on(events.CAMERAS_RECONNECT)
+    async def on_cameras_reconnect(data):
+        print(events.CAMERAS_RECONNECT)
+        camera = CAMERAS.get(data["cameraID"])
+        try:
+            if camera is None:
+                print("Camera with ID not found")
+                return
+            print(f"Connecting to {camera}")
+            camera.connect()
+            create_model_thread(camera, sio, api_client, async_loop)
+            CONNECTED_CAMERAS[camera.id] = camera
+            print("Connected")
+        except Exception as e:
+            print(f"Failed to connect to {camera}")
+            print(e)
 
     @sio.on(events.CAMERAS_DISCOVER)
     async def on_cameras_discover(data):
