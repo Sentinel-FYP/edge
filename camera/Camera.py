@@ -39,6 +39,7 @@ class Camera:
         self.clipFileName = None
         self.video_writer: cv2.VideoWriter = None
         self.id = id
+        self.cap = None
 
     def __hash__(self) -> int:
         return hash(self.id)

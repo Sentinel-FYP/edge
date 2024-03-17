@@ -101,6 +101,20 @@ def register_camera_events(
             if camera is None:
                 print("Camera with ID not found")
                 return
+            camera.disconnect()
+            print("fetching new camera creds")
+            newCameraCreds = await api_client.get_camera_by_id(data["cameraID"])
+            if newCameraCreds is None:
+                print("could not fetch new camera credentials")
+                return
+            camera: Camera = Camera.from_credentials(
+                cameraIP=newCameraCreds["cameraIP"],
+                username=newCameraCreds["username"],
+                password=newCameraCreds["password"],
+                name=newCameraCreds["cameraName"],
+                id=newCameraCreds["_id"],
+            )
+            CAMERAS[camera.id] = camera
             print(f"Connecting to {camera}")
             camera.connect()
             create_model_thread(camera, sio, api_client, async_loop)
