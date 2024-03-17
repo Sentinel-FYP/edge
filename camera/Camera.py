@@ -167,8 +167,7 @@ class Camera:
         await sio_client.emit(
             events.CAMERAS_UPDATE,
             {
-                "deviceID": config.DEVICE_ID,
-                "cameraName": self.name,
+                "cameraID": self.id,
                 "thumbnail": base64_string,
                 "active": True,
             },
@@ -178,8 +177,7 @@ class Camera:
         await sio_client.emit(
             events.CAMERAS_UPDATE,
             {
-                "deviceID": config.DEVICE_ID,
-                "cameraName": self.name,
+                "cameraID": self.id,
                 "active": active,
             },
         )
