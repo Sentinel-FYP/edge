@@ -54,6 +54,7 @@ class Paths(Enum):
     CLIPS_DIR: Path = Path.cwd() / "clips"
     TEMP_DIR: Path = Path.cwd() / "temp"
     CAMS_CACHE_FILE: Path = Path.cwd() / "data" / "cams.txt"
+    TOKEN_FILE: Path = Path.cwd() / "data" / "token.txt"
     TF_LITE_MODEL: Path = Path.cwd() / "saved_models" / "model.tflite"
     GPU_MODEL: Path = Path.cwd() / "saved_models" / "model_gpu"
     LOGS_DIR: Path = Path.cwd() / "logs"
@@ -70,7 +71,8 @@ class Paths(Enum):
             )
         if not cls.CAMS_CACHE_FILE.value.parent.exists():
             cls.CAMS_CACHE_FILE.value.parent.mkdir(parents=True, exist_ok=True)
-            cls.CAMS_CACHE_FILE.value.touch(exist_ok=True)
+        cls.CAMS_CACHE_FILE.value.touch(exist_ok=True)
+        cls.TOKEN_FILE.value.touch(exist_ok=True)
         cls.CLIPS_DIR.value.mkdir(parents=True, exist_ok=True)
         cls.TEMP_DIR.value.mkdir(parents=True, exist_ok=True)
         cls.LOGS_DIR.value.mkdir(parents=True, exist_ok=True)

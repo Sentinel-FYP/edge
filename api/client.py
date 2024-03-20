@@ -7,8 +7,9 @@ import config
 class APIClient:
     def __init__(self):
         self.client = httpx.AsyncClient(base_url=config.BASE_URL)
-        with open("TOKEN", "r") as file:
+        with open(config.Paths.TOKEN_FILE.value, "r") as file:
             self.auth_token = file.read()
+            self.auth_token = self.auth_token if self.auth_token else "temp_token"
         self.client.headers["Authorization"] = f"Bearer {self.auth_token}"
         self.deviceID = config.DEVICE_ID
         self.deviceMongoId = None
@@ -31,13 +32,13 @@ class APIClient:
             self.deviceMongoId = response["edgeDevice"]["_id"]
             self.device = response["edgeDevice"]
             # write token to file
-            with open("TOKEN", "w") as file:
+            with open(config.Paths.TOKEN_FILE.value, "w") as file:
                 file.write(self.auth_token)
         else:
             print("TOKEN VALID: REUSING TOKEN")
             self.deviceMongoId = response["_id"]
             self.device = response
-            self.device["cameras"] = await self.get_cameras()
+        self.device["cameras"] = await self.get_cameras()
         return self
 
     async def get_cameras(self):

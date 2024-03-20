@@ -147,11 +147,11 @@ def register_camera_events(
 
 
 async def fetch_registered_cameras(api_client: APIClient):
-    try:
-        print("Fetching registered cameras from database...")
-        camerasCredentials = api_client.device["cameras"]
-        print("Total Registered Cameras", len(camerasCredentials))
-        for cred in camerasCredentials:
+    print("Fetching registered cameras from database...")
+    camerasCredentials = api_client.device["cameras"]
+    print("Total Registered Cameras", len(camerasCredentials))
+    for cred in camerasCredentials:
+        try:
             camera = Camera.from_credentials(
                 cameraIP=cred["cameraIP"],
                 username=cred["username"],
@@ -160,8 +160,8 @@ async def fetch_registered_cameras(api_client: APIClient):
                 id=cred["_id"],
             )
             CAMERAS[camera.id] = camera
-    except KeyError:
-        print(f"{cred} is not a valid camera credentials. Skipping...")
+        except KeyError:
+            print(f"{cred} is not a valid camera credentials. Skipping...")
 
 
 async def connect_to_cameras(sio_client: SioClient):
