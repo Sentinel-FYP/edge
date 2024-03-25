@@ -4,6 +4,7 @@ from api import APIClient
 from sio_client import SioClient
 from camera import Camera
 from typing import List, Dict
+import config
 
 MODEL_THREADS: Dict[Camera, ModelThread] = {}
 
@@ -28,6 +29,7 @@ def create_model_thread(
         sio_client=sio,
     )
     MODEL_THREADS[camera] = model_thread
+    config.FRAME_SKIP_RATE = config.FRAME_SKIP_RATE + 2
     model_thread.start()
 
 
