@@ -113,6 +113,7 @@ class ModelThread(Thread):
             self.api_client, self.sio_client, self.async_loop, self.camera
         )
         loop_counter = 0
+        fc = 0
         try:
             while True:
                 if self.terminate_event.is_set():
