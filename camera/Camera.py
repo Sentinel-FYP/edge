@@ -51,7 +51,7 @@ class Camera:
     def from_credentials(
         cls, cameraIP: str, username: str, password: str, name, id=None, channel=None
     ):
-        url = f"rtsp://{username.strip()}:{password.strip()}@{cameraIP}/"
+        url = f"rtsp://{username.strip()}:{password.strip()}@{cameraIP}"
         if channel:
             url += channel
         return cls(
@@ -69,6 +69,8 @@ class Camera:
         result = True
         try:
             ip, port = self.cameraIP.split(":")
+            if "/" in port:
+                port = port.split("/")[0]
             port = int(port)
             s.connect((ip, port))
         except socket.error:
