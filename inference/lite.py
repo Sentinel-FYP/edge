@@ -31,17 +31,17 @@ class LiteModel:
 
     # Extract state names and create the initial (zero) states
     def state_name(self, name: str) -> str:
-        return name[len('serving_default_'):-len(':0')]
+        return name[len("serving_default_") : -len(":0")]
 
     def init_states(self, interpreter):
         init_states = {
-            self.state_name(x['name']): tf.zeros(x['shape'], dtype=x['dtype'])
+            self.state_name(x["name"]): tf.zeros(x["shape"], dtype=x["dtype"])
             for x in interpreter.get_input_details()
         }
-        del init_states['image']
+        del init_states["image"]
         return init_states
 
-    def feed_frame(self, frame):
+    def feed_frame(self, frame, threshold=0.5):
         frame = self.format_frames(frame)
         self.frame_count += 1
         inputs = frame[tf.newaxis, tf.newaxis, ...]
@@ -52,7 +52,12 @@ class LiteModel:
             for label, p in self.get_top_k(probabilities[-1]):
                 break
             self.probability = p
-            self.prediction = AnomalyType.ANOMALY if label == "Anomaly" else AnomalyType.NORMAL
+            self.prediction = (
+                AnomalyType.ANOMALY if label == "Anomaly" else AnomalyType.NORMAL
+            )
+            if self.prediction == AnomalyType.ANOMALY and self.probability <= threshold:
+                self.prediction = AnomalyType.NORMAL
+                self.probability = 1 - self.probability
 
     def format_frames(self, frame):
         """
@@ -72,11 +77,11 @@ class LiteModel:
 
     def get_logits(self, inputs):
         outputs = self.model(**self.states, image=inputs)
-        logits = outputs.pop('logits')
+        logits = outputs.pop("logits")
         states = outputs
         return logits, states
 
-    def get_top_k(self, probs, k=5, label_map=['Anomaly', 'Normal']):
+    def get_top_k(self, probs, k=5, label_map=["Anomaly", "Normal"]):
         """Outputs the top k model labels and probabilities on the given video.
 
         Args:
@@ -89,12 +94,11 @@ class LiteModel:
         a tuple of the top-k labels and probabilities.
         """
         # Sort predictions to find top_k
-        top_predictions = tf.argsort(
-            probs, axis=-1, direction='DESCENDING')[:k]
+        top_predictions = tf.argsort(probs, axis=-1, direction="DESCENDING")[:k]
         # collect the labels of top_k predictions
         top_labels = tf.gather(label_map, top_predictions, axis=-1)
         # decode lablels
-        top_labels = [label.decode('utf8') for label in top_labels.numpy()]
+        top_labels = [label.decode("utf8") for label in top_labels.numpy()]
         # top_k probabilities of the predictions
         top_probs = tf.gather(probs, top_predictions, axis=-1).numpy()
         return tuple(zip(top_labels, top_probs))

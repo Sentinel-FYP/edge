@@ -35,7 +35,7 @@ class Camera:
         self.username = username
         self.password = password
         self.fc = 0
-        self.skip_rate = config.FRAME_SKIP_RATE
+        # self.skip_rate = config.FRAME_SKIP_RATE
         self.clipFileName = None
         self.video_writer: cv2.VideoWriter = None
         self.id = id
@@ -102,13 +102,13 @@ class Camera:
         if self.cap is None:
             raise CameraDisconnected("Camera disconnected")
         if self.clipFileName is None:
-            for _ in range(self.skip_rate - 1):
+            for _ in range(config.FRAME_SKIP_RATE - 1):
                 ret = self.cap.grab()
                 self.fc += 1
                 if not ret:
                     raise CameraDisconnected("Camera disconnected")
         else:
-            for _ in range(self.skip_rate - 1):
+            for _ in range(config.FRAME_SKIP_RATE - 1):
                 ret, frame = self.cap.read()
                 self.fc += 1
                 if not ret or frame is None:

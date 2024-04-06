@@ -120,7 +120,7 @@ class ModelThread(Thread):
                     break
                 frame = self.camera.get_frame()
                 fc = self.camera.fc
-                model.feed_frame(frame)
+                model.feed_frame(frame, threshold=config.ANOMALY_THRESHOLD)
                 # Camera.put_text_overlay(
                 #     frame,
                 #     text=f"{model.prediction}: {model.probability*100:.2f}%",

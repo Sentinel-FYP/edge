@@ -29,7 +29,8 @@ def create_model_thread(
         sio_client=sio,
     )
     MODEL_THREADS[camera] = model_thread
-    config.FRAME_SKIP_RATE = config.FRAME_SKIP_RATE + 2
+    config.FRAME_SKIP_RATE = config.FRAME_SKIP_RATE + config.FRAME_SKIP_INCREMENT
+    print("Frame Skip Rate", config.FRAME_SKIP_RATE)
     model_thread.start()
 
 
