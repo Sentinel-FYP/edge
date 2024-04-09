@@ -172,6 +172,7 @@ class Camera:
                 "cameraID": self.id,
                 "thumbnail": base64_string,
                 "active": True,
+                "deviceID": config.DEVICE_ID,
             },
         )
 
@@ -181,6 +182,7 @@ class Camera:
             {
                 "cameraID": self.id,
                 "active": active,
+                "deviceID": config.DEVICE_ID,
             },
         )
 
