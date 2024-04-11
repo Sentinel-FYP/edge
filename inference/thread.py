@@ -167,6 +167,10 @@ class ModelThread(Thread):
             self.logger.info(
                 f"total_frames : {fc} | time_taken : {end - start} | latency : {(end - start) / fc}"
             )
+            asyncio.ensure_future(
+                self.camera.update_active_status(self.sio_client, False),
+                loop=self.async_loop,
+            )
             self.logger.info("Model thread terminated")
             self.terminate_event.set()
             self.camera.disconnect()
