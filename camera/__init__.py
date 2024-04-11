@@ -89,6 +89,10 @@ def register_camera_events(
                 return
             cameraToDelete.disconnect()
             await cameraToDelete.update_active_status(sio, False)
+            del CONNECTED_CAMERAS[data["cameraID"]]
+            config.FRAME_SKIP_RATE = (
+                config.FRAME_SKIP_RATE - config.FRAME_SKIP_INCREMENT
+            )
         except Exception:
             print("camera deletion failed")
             traceback.print_exc()
