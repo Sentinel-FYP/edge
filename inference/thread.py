@@ -36,7 +36,9 @@ class AnomalyHandler:
             print("Anomaly Started")
             asyncio.ensure_future(
                 self.sio_client.send_alert(
-                    "Anomaly Detected", f"Anomaly Detected in the {self.camera.name}"
+                    "Anomaly Detected",
+                    f"Anomaly Detected in the {self.camera.name}",
+                    self.camera.id,
                 ),
                 loop=self.async_loop,
             )

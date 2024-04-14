@@ -33,13 +33,14 @@ class SioClient(AsyncClient):
     async def close(self):
         await self.disconnect()
 
-    async def send_alert(self, notificationTitle, notificationMessage):
+    async def send_alert(self, notificationTitle, notificationMessage, cameraID):
         await self.emit(
             events.ALERT_SEND,
             {
                 "deviceID": config.DEVICE_ID,
                 "notificationTitle": notificationTitle,
                 "notificationMessage": notificationMessage,
+                "cameraID": cameraID,
             },
         )
 
