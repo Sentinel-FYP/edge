@@ -126,6 +126,13 @@ def register_camera_events(
             print("Connected")
         except Exception as e:
             print(f"Failed to connect to {camera}")
+            await sio.emit(
+                events.ERROR,
+                {
+                    "message": "Camera Connection Error",
+                    "deviceID": config.DEVICE_ID,
+                },
+            )
             print(e)
 
     @sio.on(events.CAMERAS_DISCOVER)
