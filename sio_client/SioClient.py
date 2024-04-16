@@ -41,6 +41,7 @@ class SioClient(AsyncClient):
                 "notificationTitle": notificationTitle,
                 "notificationMessage": notificationMessage,
                 "cameraID": cameraID,
+                "type": "Anomaly",
             },
         )
 
