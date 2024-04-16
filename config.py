@@ -15,7 +15,7 @@ load_dotenv(override=True)
 # assert S3_SECRET, "S3_SECRET not found in environment"
 
 STREAM_FPS = "24"
-STREAM_RES = "320x240"
+STREAM_RES = "640x480"
 DEVICE_ID = os.getenv("DEVICE_ID") or "abc"
 # SERVER_URL = "http://localhost:5000"
 SERVER_URL = os.getenv("SERVER_URL") or "http://13.51.86.179:5500"
