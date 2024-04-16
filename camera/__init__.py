@@ -104,8 +104,8 @@ def register_camera_events(
         try:
             if camera is None:
                 print("Camera with ID not found")
-                return
-            camera.disconnect()
+            else:
+                camera.disconnect()
             print("fetching new camera creds")
             newCameraCreds = await api_client.get_camera_by_id(data["cameraID"])
             if newCameraCreds is None:
