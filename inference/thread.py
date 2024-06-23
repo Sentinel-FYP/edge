@@ -4,7 +4,7 @@ from .gpu import GPUModel
 import logging
 from timeit import default_timer as timer
 from api.models import AnomalyLog
-from datetime import datetime
+from datetime import datetime, UTC
 from api import APIClient
 import asyncio
 import utils
@@ -43,7 +43,7 @@ class AnomalyHandler:
                 loop=self.async_loop,
             )
             self.anomaly_started = True
-            self.anomaly_log.occurredAt = datetime.now().isoformat()
+            self.anomaly_log.occurredAt = datetime.utcnow().isoformat()
             self.anomaly_log.clipFileName = self.camera.start_recording(frame)
             self.anomaly_log.fromDevice = self.api_client.deviceMongoId
             self.anomaly_log.fromCamera = self.camera.id
@@ -52,7 +52,7 @@ class AnomalyHandler:
         if self.anomaly_started:
             print("Anomaly Ended")
             self.anomaly_started = False
-            self.anomaly_log.endedAt = datetime.now().isoformat()
+            self.anomaly_log.endedAt = datetime.now(UTC).isoformat()
             self.camera.stop_recording()
             asyncio.ensure_future(
                 self.api_client.post_anomaly_log(self.anomaly_log.clone()),
